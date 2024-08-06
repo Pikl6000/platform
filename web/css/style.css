@@ -1,0 +1,69 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+}
+
+.container {
+    display: flex;
+    flex-flow: row;
+}
+
+
+ /*Sidebar*/
+.sidebar {
+    background-color: #801b1b;
+    height: 100vh;
+}
+
+nav{
+    width: 4rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.sidebar-elements {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    text-align: center;
+}
+
+.sidebar-elements li {
+    margin: 10px 0;
+}
+
+.sidebar-elements img {
+    width: 32px;
+    height: 32px;
+}
+
+.sidebar-link {
+    text-decoration: none;
+    color: black;
+}
+
+/*END Sidebar*/
+
+.main-content {
+    display: flex;
+    flex: 0 0 100%;
+    flex-direction: row;
+}
+
+ /*Selection*/
+.selection {
+    width: 30%;
+    background-color: lightcoral;
+}
+
+
+ /*Main Content*/
+.content {
+    width: 70%;
+    background-color: lightblue;
+}
