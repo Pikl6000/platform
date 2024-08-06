@@ -1,2 +1,2 @@
 # platform
-Platform made with Java Spring 
+Platform for messaging
