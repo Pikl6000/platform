@@ -14,6 +14,7 @@ html, body {
 .sidebar {
     background-color: #801b1b;
     height: 100vh;
+    padding-top: 1rem;
 }
 
 nav{
@@ -57,13 +58,55 @@ nav{
 
  /*Selection*/
 .selection {
-    width: 30%;
-    background-color: lightcoral;
+    padding: .5rem;
+    background-color: #e34877;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 100%;
 }
 
+.user-list {
+    width: 100%;
+    text-align: center;
+    background-color: #15dcc5;
+    list-style: none;
+    margin: 5px 0;
+    padding-bottom: .8rem;
+    padding-top: .8rem;
+    border-radius: 5px;
+}
+
+.user-list-element {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-align: center;
+}
+
+.help{
+    min-width: 200px;
+    max-width: 800px;
+    padding: .5rem;
+    width: 30%;
+    background-color: #e34877;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 100%;
+}
+
+.chat-text{
+    font-family: Arial, serif;
+    color: aliceblue;
+    margin: 0;
+    padding-left: 1rem;
+    padding-right: .5rem;
+}
 
  /*Main Content*/
 .content {
+    padding: .5rem;
     width: 70%;
     background-color: lightblue;
 }

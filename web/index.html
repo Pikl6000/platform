@@ -26,9 +26,16 @@
         </header>
 
         <div class="main-content">
-            <div class="selection container">
-                Selection
+            <div class="help">
+                <h1 class="chat-text">Chats</h1>
+                <div class="selection container">
+
+                </div>
             </div>
+
+
+
+
             <div class="content container">
                 Content
             </div>
@@ -36,4 +43,41 @@
     </div>
 
     </body>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('http://localhost:3000/api/users');
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                console.log('Data received:', data);
+
+                // Vyber div s triedou "selection"
+                const container = document.querySelector('.selection');
+
+                // Vyčisti predchádzajúci obsah
+                container.innerHTML = '';
+
+                // Vytvor zoznam
+                const ul = document.createElement('ul');
+                ul.classList.add('user-list-element');
+
+                data.forEach(user => {
+                    const li = document.createElement('li');
+                    li.classList.add('user-list');
+                    li.textContent = `${user.name} ${user.lastname}`;
+                    ul.appendChild(li);
+                });
+
+                // Pridaj zoznam do kontajnera
+                container.appendChild(ul);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                const container = document.querySelector('.selection');
+                container.textContent = `Error loading data: ${error.message}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
 </html>
