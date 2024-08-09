@@ -10,7 +10,7 @@
     </head>
     <body>
 
-    <div class="container w-100 p-0">
+    <div class="container-fluid d-flex p-0 m-0">
         <header class="sidebar full-height">
             <nav>
                 <ul class="sidebar-elements">
@@ -27,45 +27,45 @@
             </nav>
         </header>
 
-        <div class="main-content container m-0 p-0">
+        <div class="main-content container-fluid d-flex m-0 p-0">
             <div class="container m-0 p-0">
-                <div class="help container-sm m-0 p-0">
+                <div class="help container-sm m-2 p-1 help-back">
                     <h1 class="chat-text">Chats</h1>
                     <div class="selection">
 
                     </div>
                 </div>
 
-                <div class="content container-sm p-2 d-flex flex-column" style="height: 100vh;">
-                    <div class="chat-bar w-100 m-0" style="height: 150px;">
+                <div class="content container-fluid p-1 m-2 d-flex flex-column help-back">
+                    <div class="chat-bar m-0">
                         <div class="user-info col p-0 m-0">
                             <div class="user-img">
                                 <img src="images/icons/page.png" class="img-thumbnail thumbnail-img" alt="Profile image">
                             </div>
                             <div class="user-status col">
-                                <!-- Obsah pre užívateľský status -->
+
                             </div>
                         </div>
                     </div>
 
                     <div class="messages-box flex-grow-1">
                         <div class="">
-                            <!-- Správy -->
+
                         </div>
                     </div>
 
                     <div class="message-bar">
-                        <div class="container">
-                            <div class="">
-                                <div class="form-group">
+                        <div class="container-fluid">
+                            <div class="d-flex align-items-center">
+                                <div class="form-group flex-grow-1 m-0">
                                     <input type="text" class="form-control" id="message" placeholder="Enter your message">
                                 </div>
-                                <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="submit" class="btn btn-primary ms-2">Submit</button>
                             </div>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
         </div>
     </div>
