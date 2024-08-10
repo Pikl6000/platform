@@ -5,7 +5,7 @@
         <title>Message App</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="css/style.css">
-        <link id="favicon" rel="icon" href="images/icons/page.png" type="image/x-icon">
+        <link id="favicon" rel="icon" href="images/icons/object.jpg" type="image/x-icon">
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     </head>
     <body>
@@ -23,12 +23,18 @@
                     <li><a href="#profile" class="sidebar-link">
                         <img src="images/icons/profile.svg" alt="Profile">
                     </a></li>
+                    <li><a href="#logout" class="sidebar-link" id="logout">
+                        <img src="images/icons/logout.svg" alt="Logout">
+                    </a></li>
                 </ul>
             </nav>
         </header>
 
+        <!--Chats and messages-->
         <div class="main-content container-fluid d-flex m-0 p-0">
-            <div class="container m-0 p-0">
+
+            <!--List of People-->
+            <div class="container-fluid d-flex m-0 p-0">
                 <div class="help container-sm m-2 p-1 help-back">
                     <h1 class="chat-text">Chats</h1>
                     <div class="selection">
@@ -37,6 +43,8 @@
                 </div>
 
                 <div class="content container-fluid p-1 m-2 d-flex flex-column help-back">
+
+                    <!--Chat User Info-->
                     <div class="chat-bar m-0">
                         <div class="user-info col p-0 m-0">
                             <div class="user-img">
@@ -48,22 +56,25 @@
                         </div>
                     </div>
 
+                    <!--Messages-->
                     <div class="messages-box flex-grow-1">
-                        <div class="">
+                        <div class="container-fluid">
 
                         </div>
                     </div>
 
-                    <div class="message-bar">
+                    <!--Message Bar-->
+                    <div class="message-bar pb-2">
                         <div class="container-fluid">
                             <div class="d-flex align-items-center">
                                 <div class="form-group flex-grow-1 m-0">
                                     <input type="text" class="form-control" id="message" placeholder="Enter your message">
                                 </div>
-                                <button type="submit" class="btn btn-primary ms-2">Submit</button>
+                                <button id="sendButton" class="btn btn-primary ms-2">Send</button>
                             </div>
                         </div>
                     </div>
+
 
                 </div>
             </div>
@@ -72,47 +83,8 @@
 
     </body>
 
-    <script>
-        async function loadData() {
-            try {
-                const response = await fetch('http://localhost:3000/api/users');
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const data = await response.json();
-                console.log('Data received:', data);
-
-                // Vyber div s triedou "selection"
-                const container = document.querySelector('.selection');
-
-                // Vyčisti predchádzajúci obsah
-                container.innerHTML = '';
-
-                // Vytvor zoznam
-                const ul = document.createElement('ul');
-                ul.classList.add('list-group');
-
-                data.forEach(user => {
-                    const li = document.createElement('li');
-                    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', "user-list-item");
-
-                    const sp = document.createElement('span');
-                    sp.classList.add('badge', 'rounded-pill', 'list-user-item');
-                    sp.textContent = `${user.name} ${user.lastname}`;
-
-                    li.appendChild(sp);
-                    ul.appendChild(li);
-                });
-
-                // Pridaj zoznam do kontajnera
-                container.appendChild(ul);
-            } catch (error) {
-                console.error('Error loading data:', error);
-                const container = document.querySelector('.selection');
-                container.textContent = `Error loading data: ${error.message}`;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadData);
-    </script>
+    <!--Load Users-->
+   <script src="js/scripts.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
