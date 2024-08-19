@@ -1,29 +1,60 @@
-const express = require('express');
+require('dotenv').config(); // Toto musí byť na začiatku súboru
+
+const express = require("express");
 const mysql = require('mysql2');
-const session = require('express-session');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const cors = require('cors');
+const session = require('express-session');
 const app = express();
 const port = 3000;
 
+console.log('Session Secret:', process.env.SESSION_SECRET);
+
 // Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
 
 // CORS
 app.use(cors({
-    origin: 'http://localhost:63342', // URL vašej frontend aplikácie
-    credentials: true // Povolenie cookies a prístupových údajov
+    origin: 'http://localhost:63342',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
 }));
 
 // Session
 app.use(session({
-    secret: 'your-secret-key', // Zmeňte na vlastný tajný kľúč
-    resave: false,
-    saveUninitialized: false, // Nastavte na false pre efektívnejšie používanie session
-    cookie: { secure: false, httpOnly: true } // Nastavte secure na true, ak používate HTTPS
+    secret: process.env.SESSION_SECRET || 'my-secret-key',
+    resave: false, // Zlepšuje výkon tým, že session nebude znovu uložená, ak sa nebola zmenená
+    saveUninitialized: false, // Zlepšuje výkon tým, že sa nebudú vytvárať sessions pre neautentizovaných používateľov
+    cookie: {
+        secure: false, // Toto by malo byť 'true' v produkcii s HTTPS
+        sameSite: 'Lax', // Default hodnota, vhodná pre väčšinu prípadov
+        maxAge: 60000 * 60 * 24 // 24 hodín
+    }
 }));
+
+// Middleware pre overenie autentifikácie
+const requireAuth = (req, res, next) => {
+    if (req.session.user && req.session.user.id) {
+        next(); // Používateľ je autentifikovaný, pokračujeme
+    } else {
+        res.redirect('/login'); // Používateľ nie je autentifikovaný, presmerovanie na prihlásenie
+    }
+}
+
+// Debugovanie session ID
+app.use((req, res, next) => {
+    console.log('Session ID:', req.session.id);
+    next();
+});
+
+// Content Security Policy
+app.use((req, res, next) => {
+    res.setHeader("Content-Security-Policy", "default-src *; img-src *; script-src *");
+    next();
+});
 
 // Database Connection
 const connection = mysql.createConnection({
@@ -43,17 +74,15 @@ connection.connect((err) => {
 
 // CORS Headers
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:63342'); // URL vašej frontend aplikácie
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:63342'); // URL frontend aplikácie
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     next();
 });
 
-// Content Security Policy
-app.use((req, res, next) => {
-    res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' http://localhost:3000; script-src 'self'");
-    next();
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/public/index.html');
 });
 
 // Register Endpoint
@@ -100,38 +129,69 @@ app.post('/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (isMatch) {
-            req.session.user = user; // Uložte používateľa do relácie
-            res.send('Logged in successfully');
+            req.session.user = { id: user.id, name: user.name, email: user.email };
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Session save error:', err);
+                    return res.status(500).send('Internal Server Error');
+                }
+                res.send('Logged in successfully');
+                console.log('Session ID after login:', req.session.id);
+            });
+
         } else {
             res.status(401).send('Incorrect username or password');
         }
     });
 });
 
+// Endpoint na získanie session informácií
+app.get("/getSession", (req, res) => {
+    if (req.session.user) {
+        res.send("Username: " + req.session.user.name);
+    } else {
+        res.send("No session data found");
+    }
+});
+
 // Logout Endpoint
 app.get('/logout', (req, res) => {
-    req.session.destroy(err => {
+    req.session.destroy((err) => {
         if (err) {
-            return res.status(500).send('Unable to log out');
+            console.error("Error destroying session:", err);
+            res.status(500).send("Error destroying session");
+        } else {
+            res.send("Session destroyed");
         }
-        res.send('Logged out successfully');
     });
 });
 
 // Get Users Endpoint
-app.get('/api/users', (req, res) => {
-    console.log('Received request for /api/users');
-    connection.query('SELECT * FROM users', (err, results) => {
+app.get('/api/users', requireAuth, (req, res) => {
+    console.log('Session:', req.session); // Logovanie session pre debugovanie
+
+    const loggedInUserId = req.session.user.id;
+
+    connection.query('SELECT * FROM users WHERE id != ?', [loggedInUserId], (err, results) => {
         if (err) {
             console.error('Error querying the database:', err);
-            return res.status(500).send('Internal Server Error');
+            res.status(500).send('Internal Server Error');
+            return;
         }
         res.json(results);
     });
 });
 
+app.get('/api/current-user', (req, res) => {
+    if (!req.session.user) {
+        return res.status(401).send('User not logged in');
+    } else {
+        return res.json({ id: req.session.user.id, name: req.session.user.name, email: req.session.user.email });
+    }
+});
+
 // Post Message Endpoint
-app.post('/api/messages', (req, res) => {
+app.post('/api/messages', requireAuth, (req, res) => {
     const { from, to, chatId, message } = req.body;
     const sendTime = new Date();
 
@@ -146,7 +206,7 @@ app.post('/api/messages', (req, res) => {
 });
 
 // Get Messages for a Chat
-app.get('/api/messages/:chatId', (req, res) => {
+app.get('/api/messages/:chatId', requireAuth, (req, res) => {
     const chatId = req.params.chatId;
     connection.query('SELECT * FROM messages WHERE chatId = ?', [chatId], (err, results) => {
         if (err) {
@@ -158,19 +218,23 @@ app.get('/api/messages/:chatId', (req, res) => {
 });
 
 // Get Chats for a User
-app.get('/api/chats/:userId', (req, res) => {
-    const userId = req.params.userId;
+app.get('/api/chats/', requireAuth, (req, res) => {
+    const userId = req.session.user.id;
     const sql = 'SELECT chatId FROM chats WHERE userId = ?'; // Prispôsob podľa svojej štruktúry databázy
+
     connection.query(sql, [userId], (err, results) => {
         if (err) {
             console.error('Error querying the database:', err);
             return res.status(500).send('Internal Server Error');
         }
-        res.json(results);
+
+        // Poskytnutie chatov a súčasného používateľa v odpovedi
+        res.json({ chats: results, currentUser: req.session.user });
     });
 });
 
 // Start Server
 app.listen(port, () => {
+    console.log('Session Secret:', process.env.SESSION_SECRET);
     console.log(`Server is running on http://localhost:${port}`);
 });

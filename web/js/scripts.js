@@ -3,12 +3,14 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.assign('login.html');
     }
 
+    loadData();
+
     // Logout
     document.getElementById('logout').addEventListener('click', async function() {
         try {
             const response = await fetch('http://localhost:3000/logout', {
-                method: 'GET', // Ak váš server vyžaduje GET metódu
-                credentials: 'include' // Uistite sa, že posielate cookies na server (ak používate cookies na sledovanie relácie)
+                method: 'GET',
+                credentials: 'include'
             });
 
             if (response.ok) {
@@ -23,25 +25,63 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Logout failed');
         }
     });
+
+    // Call loadData when DOM is fully loaded
+
 });
 
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Zavolanie API na získanie chatov a údajov o používateľovi
+        const chatsResponse = await fetch(`http://localhost:3000/api/chats/`, {
+            method: 'GET',
+            credentials: 'include'
+        });
 
+        if (!chatsResponse.ok) throw new Error(`HTTP error! status: ${chatsResponse.status}`);
 
+        const { chats, currentUser } = await chatsResponse.json();
+        const userId = currentUser.id;
+
+        if (chats.length > 0) {
+            const firstChatId = chats[0].chatId;
+            const messagesResponse = await fetch(`http://localhost:3000/api/messages/${firstChatId}`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+
+            if (!messagesResponse.ok) throw new Error(`HTTP error! status: ${messagesResponse.status}`);
+
+            const messages = await messagesResponse.json();
+
+            const messagesBox = document.querySelector('.messages-box .container-fluid');
+            messagesBox.innerHTML = '';
+
+            messages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = `${msg.message} (${msg.sendTime})`;
+                messagesBox.appendChild(messageElement);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading chat data:', error);
+    }
+});
 
 async function loadData() {
     try {
-        const response = await fetch('http://localhost:3000/api/users');
+        const response = await fetch('http://localhost:3000/api/users', {
+            method: 'GET',
+            credentials: 'include'
+        });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
         const data = await response.json();
         console.log('Data received:', data);
 
-        // Vyber div s triedou "selection"
         const container = document.querySelector('.selection');
+        container.innerHTML = ''; // Vyčistenie predchádzajúceho obsahu
 
-        // Vyčisti predchádzajúci obsah
-        container.innerHTML = '';
-
-        // Vytvor zoznam
         const ul = document.createElement('ul');
         ul.classList.add('list-group');
 
@@ -57,82 +97,10 @@ async function loadData() {
             ul.appendChild(li);
         });
 
-        // Pridaj zoznam do kontajnera
-        container.appendChild(ul);
+        container.appendChild(ul); // Pridanie zoznamu do kontajnera
     } catch (error) {
         console.error('Error loading data:', error);
         const container = document.querySelector('.selection');
         container.textContent = `Error loading data: ${error.message}`;
     }
 }
-
-document.addEventListener('DOMContentLoaded', loadData);
-
-
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // Zmeň ID používateľa podľa potreby
-        const userId = 1;
-
-        // Načítaj zoznam chatov
-        const chatsResponse = await fetch(`/api/chats/${userId}`);
-        const chats = await chatsResponse.json();
-
-        if (chats.length > 0) {
-            // Načítaj správy pre prvý chat
-            const firstChatId = chats[0].chatId;
-            const messagesResponse = await fetch(`/api/messages/${firstChatId}`);
-            const messages = await messagesResponse.json();
-
-            // Vyber div pre správy
-            const messagesBox = document.querySelector('.messages-box .container-fluid');
-            messagesBox.innerHTML = '';  // Vyčisti obsah
-
-            // Zobraz správy
-            messages.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.textContent = `${msg.message} (${msg.sendTime})`;  // Môžeš prispôsobiť formát zobrazenia
-                messagesBox.appendChild(messageElement);
-            });
-        }
-    } catch (error) {
-        console.error('Error loading chat data:', error);
-    }
-});
-
-document.getElementById('sendButton').addEventListener('click', async function() {
-    const messageInput = document.getElementById('message');
-    const message = messageInput.value;
-    const chatId = 1; // Zmeň na aktuálne chatId
-    const fromUserId = 1; // Zmeň na ID aktuálneho používateľa
-    const toUserId = 2; // Zmeň na ID prijímateľa
-
-    if (message.trim() !== '') {
-        try {
-            const response = await fetch('http://localhost:3000/api/messages', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from: fromUserId,
-                    to: toUserId,
-                    chatId: chatId,
-                    message: message
-                })
-            });
-
-            if (response.ok) {
-                messageInput.value = ''; // Vyčistiť input po úspešnom odoslaní
-                console.log('Message sent successfully');
-                // Môžeš tu tiež zavolať funkciu na obnovenie správ v messages-box
-            } else {
-                console.error('Failed to send message');
-            }
-        } catch (error) {
-            console.error('Error sending message:', error);
-        }
-    } else {
-        console.log('Message is empty');
-    }
-});
