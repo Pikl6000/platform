@@ -4,18 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const showRegisterLink = document.getElementById('show-register');
     const showLoginLink = document.getElementById('show-login');
 
-    // Načítanie session dát
-    const sessionData = JSON.parse(localStorage.getItem('session'));
-
-    if (sessionData && sessionData.user) {
-        console.log('User is logged in:', sessionData.user);
-        // Načítaj chat a ďalšie údaje
-        loadData();
-    } else {
-        console.log('User is not logged in');
-        showLogin();
-    }
-
     function showLogin() {
         loginForm.classList.remove('hidden');
         registerForm.classList.add('hidden');
@@ -46,10 +34,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
         const name = document.getElementById('registerName').value;
-        const lastName = document.getElementById('registerLastName').value;
+        const lastname = document.getElementById('registerLastName').value;
+
+        // Skontrolujte, či sú všetky povinné hodnoty vyplnené
+        if (!email || !password || !name || !lastname) {
+            alert('All fields are required!');
+            return;
+        }
 
         try {
-            const response = await fetch('http://localhost:3000/api/register', {
+            const response = await fetch('http://localhost:3000/api/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -58,10 +52,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     email,
                     password,
                     name,
-                    lastName,
-                    joineddate: new Date(),
-                    lastonlinedate: new Date()
-                })
+                    lastname,
+                    joineddate: new Date().toISOString(),
+                    lastonline: new Date().toISOString()
+                }),
+                credentials: 'include'
             });
 
             if (response.ok) {
@@ -80,24 +75,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // Spracovanie prihlásenia
     document.getElementById('loginFormSubmit').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('loginEmail').value;
+        const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
 
         try {
-            const response = await fetch('http://localhost:3000/api/login', {
+            const response = await fetch('http://localhost:3000/api/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include', // Zahŕňaj cookies pri CORS požiadavkách
-                body: JSON.stringify({ username, password })
+                credentials: 'include',
+                body: JSON.stringify({ email, password })
             });
 
             if (response.ok) {
-                const sessionData = await response.json();
-                localStorage.setItem('session', JSON.stringify(sessionData)); // Uloženie session dát
-                localStorage.setItem('jwtToken', sessionData.token); // Uloženie JWT tokenu
-                console.log('Session stored in localStorage:', localStorage.getItem('session'));
+                const { token } = await response.json();
+                localStorage.setItem('token', token);
                 showMainPage();
             } else {
                 const errorText = await response.text();

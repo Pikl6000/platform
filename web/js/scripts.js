@@ -6,37 +6,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout
     document.getElementById('logout').addEventListener('click', async function() {
         try {
-            const response = await fetch('http://localhost:3000/api/logout', {
+            await fetch('http://localhost:3000/api/logout', {
                 method: 'GET',
                 credentials: 'include'
             });
 
-            if (response.ok) {
-                alert('Logged out successfully');
-                showLogin();
-            } else {
-                const errorText = await response.text();
-                alert(`Error: ${errorText}`);
-            }
+            localStorage.removeItem('token');
+
+            alert('Logged out successfully');
+            showLogin();
         } catch (error) {
             console.error('Logout failed:', error);
             alert('Logout failed');
         }
     });
 
-    // Call loadData when DOM is fully loaded
     loadData();
 });
 
 async function loadChat() {
     try {
-        const token = localStorage.getItem('jwtToken'); // Získanie tokenu z localStorage
+        const token = localStorage.getItem('token');
 
-        //Zavolanie API na získanie chatov a údajov o používateľovi
-        const chatsResponse = await fetch(`http://localhost:3000/api/chats/`, {
+        const chatsResponse = await fetch('http://localhost:3000/api/chats/', {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
+                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             credentials: 'include'
@@ -52,7 +47,7 @@ async function loadChat() {
             const messagesResponse = await fetch(`http://localhost:3000/api/messages/${firstChatId}`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include'
@@ -78,50 +73,50 @@ async function loadChat() {
 
 async function loadData() {
     try {
-        const token = localStorage.getItem('jwtToken'); // Získanie tokenu z localStorage
+        let token = localStorage.getItem('token');
 
-        // Odoslanie GET požiadavky na backend
         const response = await fetch('http://localhost:3000/api/users', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
-                'Content-Type': 'application/json'
-            },
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include"
+        });
+
+        if (response.status === 401) {
+            token = await refreshAccessToken();
+            if (!token) throw new Error('Unable to refresh token');
+
+            const retryResponse = await fetch('http://localhost:3000/api/users', {
+                headers: { Authorization: `Bearer ${token}` },
+                credentials: "include"
+            });
+
+            if (!retryResponse.ok) throw new Error('Network response was not ok');
+            const data = await retryResponse.json();
+            // Pokračuj s dátami
+        } else {
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            // Pokračuj s dátami
+        }
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+    }
+}
+
+async function refreshAccessToken() {
+    try {
+        const response = await fetch('http://localhost:3000/api/refresh-token', {
+            method: 'POST',
             credentials: 'include'
         });
 
-        // Kontrola, či bola požiadavka úspešná
-        if (!response.ok) {
-            throw new Error('Network response was not ok ' + response.statusText);
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.accessToken);
+            return data.accessToken;
+        } else {
+            throw new Error('Failed to refresh access token');
         }
-
-        // Parsing odpovede na JSON
-        const data = await response.json();
-
-        // Nájdenie kontajnera, kde sa zoznam používateľov zobrazí
-        const container = document.querySelector('.selection');
-        container.innerHTML = ''; // Vyčistenie predchádzajúceho obsahu
-
-        // Vytvorenie zoznamu (ul element)
-        const ul = document.createElement('ul');
-        ul.classList.add('list-group');
-
-        // Iterácia cez používateľov a ich pridanie do zoznamu
-        data.forEach(user => {
-            const li = document.createElement('li');
-            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
-
-            const sp = document.createElement('span');
-            sp.classList.add('badge', 'rounded-pill', 'list-user-item');
-            sp.textContent = `${user.name} ${user.lastname}`;
-
-            li.appendChild(sp);
-            ul.appendChild(li);
-        });
-
-        // Pridanie zoznamu do kontajnera
-        container.appendChild(ul);
     } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
+        console.error('Error refreshing access token:', error);
     }
 }
