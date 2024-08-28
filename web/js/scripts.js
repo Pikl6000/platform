@@ -3,12 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.assign('login.html');
     }
 
-    loadData();
-
     // Logout
     document.getElementById('logout').addEventListener('click', async function() {
         try {
-            const response = await fetch('http://localhost:3000/logout', {
+            const response = await fetch('http://localhost:3000/api/logout', {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -27,14 +25,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Call loadData when DOM is fully loaded
-
+    loadData();
 });
 
-document.addEventListener('DOMContentLoaded', async function() {
+async function loadChat() {
     try {
-        // Zavolanie API na získanie chatov a údajov o používateľovi
+        const token = localStorage.getItem('jwtToken'); // Získanie tokenu z localStorage
+
+        //Zavolanie API na získanie chatov a údajov o používateľovi
         const chatsResponse = await fetch(`http://localhost:3000/api/chats/`, {
             method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
 
@@ -47,6 +51,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             const firstChatId = chats[0].chatId;
             const messagesResponse = await fetch(`http://localhost:3000/api/messages/${firstChatId}`, {
                 method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
+                    'Content-Type': 'application/json'
+                },
                 credentials: 'include'
             });
 
@@ -66,28 +74,42 @@ document.addEventListener('DOMContentLoaded', async function() {
     } catch (error) {
         console.error('Error loading chat data:', error);
     }
-});
+}
 
 async function loadData() {
     try {
+        const token = localStorage.getItem('jwtToken'); // Získanie tokenu z localStorage
+
+        // Odoslanie GET požiadavky na backend
         const response = await fetch('http://localhost:3000/api/users', {
             method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Pridanie tokenu do hlavičky
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
+        // Kontrola, či bola požiadavka úspešná
+        if (!response.ok) {
+            throw new Error('Network response was not ok ' + response.statusText);
+        }
+
+        // Parsing odpovede na JSON
         const data = await response.json();
-        console.log('Data received:', data);
 
+        // Nájdenie kontajnera, kde sa zoznam používateľov zobrazí
         const container = document.querySelector('.selection');
         container.innerHTML = ''; // Vyčistenie predchádzajúceho obsahu
 
+        // Vytvorenie zoznamu (ul element)
         const ul = document.createElement('ul');
         ul.classList.add('list-group');
 
+        // Iterácia cez používateľov a ich pridanie do zoznamu
         data.forEach(user => {
             const li = document.createElement('li');
-            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', "user-list-item");
+            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
 
             const sp = document.createElement('span');
             sp.classList.add('badge', 'rounded-pill', 'list-user-item');
@@ -97,10 +119,9 @@ async function loadData() {
             ul.appendChild(li);
         });
 
-        container.appendChild(ul); // Pridanie zoznamu do kontajnera
+        // Pridanie zoznamu do kontajnera
+        container.appendChild(ul);
     } catch (error) {
-        console.error('Error loading data:', error);
-        const container = document.querySelector('.selection');
-        container.textContent = `Error loading data: ${error.message}`;
+        console.error('There was a problem with the fetch operation:', error);
     }
 }
