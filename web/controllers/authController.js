@@ -1,16 +1,36 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const User = require('../models/user'); // Import modelu používateľa
+const User = require('../models/user');
 
+// Funkcia na generovanie tokenu
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, name: user.name, email: user.email },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET, // Použitie environmentálnej premennej
         { expiresIn: '1h' }
     );
 };
 
-// Prihlásenie
+// Middleware na overenie tokenu
+exports.authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1] || req.cookies.token;
+
+    if (!token) {
+        return res.status(401).send('Access Denied');
+    }
+
+    try {
+        const verified = jwt.verify(token, 'your-jwt-secret');
+        req.user = verified;
+        next();
+    } catch (error) {
+        res.status(400).send('Invalid Token');
+    }
+};
+
+
+// Prihlásenie používateľa
 exports.login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -22,7 +42,7 @@ exports.login = async (req, res) => {
         if (!isMatch) return res.status(401).send('Invalid credentials');
 
         const token = generateToken(user);
-        res.cookie('token', token, { httpOnly: true, secure: false }); // Nastavenie cookie s tokenom
+        res.cookie('token', token, { httpOnly: true, secure: false });
         res.json({ user: { id: user.id, name: user.name, email: user.email }, token });
     } catch (error) {
         console.error('Error logging in:', error);
@@ -30,7 +50,7 @@ exports.login = async (req, res) => {
     }
 };
 
-// Registrácia
+// Registrácia používateľa
 exports.register = async (req, res) => {
     const { email, password, name, lastname, joineddate } = req.body;
 
@@ -54,7 +74,7 @@ exports.register = async (req, res) => {
     }
 };
 
-// Odhlásenie
+// Odhlásenie používateľa
 exports.logout = (req, res) => {
     res.clearCookie('token');
     req.session.destroy((err) => {

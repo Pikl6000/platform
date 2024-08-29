@@ -1,11 +1,31 @@
 const User = require('../models/user'); // Import modelu používateľa
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { Op } = require('sequelize');
 
 // Získanie všetkých používateľov
 exports.getAllUsers = async (req, res) => {
     try {
         const users = await User.findAll();
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).send('Server error');
+    }
+};
+
+exports.getAllUsersWithout = async (req, res) => {
+    try {
+        // Predpokladáme, že ID prihláseného používateľa je v req.user.id
+        const currentUserId = req.user.id; // Alebo použite priamo req.user, ak máte k dispozícii celé objekt používateľa
+
+        // Nájdeme všetkých používateľov okrem prihláseného používateľa
+        const users = await User.findAll({
+            where: {
+                id: { [Op.ne]: currentUserId }
+            }
+        });
+
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);

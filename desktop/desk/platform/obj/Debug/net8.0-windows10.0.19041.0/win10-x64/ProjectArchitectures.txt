@@ -1,1 +1,0 @@
-D:\GitHub\platform\desktop\desk\platform\platform.csproj;x64
