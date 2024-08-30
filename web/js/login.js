@@ -104,3 +104,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     showLogin();
 });
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        try {
+            console.log("Check token with api");
+            const response = await fetch('http://localhost:3000/api/users/verifyToken', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                window.location.href = 'index.html';
+                console.log("Check token 8=D");
+            }
+        } catch (error) {
+            console.error('Error verifying token:', error);
+        }
+    }
+});

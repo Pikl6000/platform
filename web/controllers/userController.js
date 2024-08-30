@@ -106,8 +106,8 @@ exports.loginUser = async (req, res) => {
         // Generovanie JWT tokenu
         const token = jwt.sign(
             { id: user.id, email: user.email },
-            'your-jwt-secret', // Nahradiť skutočným tajným kľúčom
-            { expiresIn: '1h' } // Token expirácia
+            'your-jwt-secret',
+            { expiresIn: '1h' }
         );
 
         // Nastavenie cookie s tokenom
@@ -151,5 +151,28 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error('Error deleting user:', error);
         res.status(500).send('Server error');
+    }
+};
+
+exports.verifyToken = (req, res) => {
+    try {
+        // Získaj token z hlavičky Authorization
+        const token = req.header('Authorization').replace('Bearer ', '');
+
+        if (!token) {
+            return res.status(401).send('Access Denied: No token provided');
+        }
+
+        const verified = jwt.verify(token, 'your-jwt-secret');
+
+        if (!verified) {
+            return res.status(401).send('Access Denied: Invalid token');
+        }
+
+        // Ak je token platný, odošli odpoveď so statusom 200
+        res.status(200).send('Token is valid');
+    } catch (error) {
+        console.error('Token verification error:', error);
+        res.status(400).send('Invalid Token');
     }
 };
