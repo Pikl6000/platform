@@ -87,6 +87,7 @@ nav{
 
 .user-list-item {
     min-width: 250px;
+    height: 60px;
 }
 
 .help{
@@ -115,12 +116,17 @@ nav{
 }
 
 .thumbnail-img {
-    max-width: 100px!important;
-    max-height: 100px;
+    max-width: 75px!important;
+    max-height: 75px;
 }
 
 .list-user-item {
     color: black!important;
+    font-size: 16px;
+    font-weight: bold;
+    /*text-transform: uppercase;*/
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -128,8 +134,13 @@ nav{
 /*    height: 75px;*/
 /*}*/
 
+.user-text-info-text {
+    color: #fffffe;
+    font-weight: bold;
+}
+
 .chat-bar {
-    height: 75px;
+    /*height: 80px;*/
 }
 
 

@@ -5,7 +5,7 @@ const cors = require('cors');
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const messageRoutes = require('./routes/messageRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 const app = express();
 app.use(express.json());
@@ -31,7 +31,7 @@ app.use(session({
 
 app.use('/api', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/messages', messageRoutes);
+app.use('/api/chats', chatRoutes);
 
 sequelize.sync()
     .then(() => console.log('Database synchronized.'))

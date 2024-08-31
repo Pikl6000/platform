@@ -6,7 +6,7 @@ const User = require('../models/user');
 const generateToken = (user) => {
     return jwt.sign(
         { id: user.id, name: user.name, email: user.email },
-        process.env.JWT_SECRET, // Použitie environmentálnej premennej
+        'your-jwt-secret',
         { expiresIn: '1h' }
     );
 };
@@ -22,6 +22,7 @@ exports.authenticateToken = (req, res, next) => {
 
     try {
         const verified = jwt.verify(token, 'your-jwt-secret');
+        console.log('Verified Token:', verified); // Toto ti ukáže, čo je dekódované z tokenu
         req.user = verified;
         next();
     } catch (error) {
@@ -29,6 +30,20 @@ exports.authenticateToken = (req, res, next) => {
     }
 };
 
+exports.verifyToken = (req, res) => {
+    const token = req.headers['authorization']?.split(' ')[1] || req.cookies.token;
+
+    if (!token) {
+        return res.status(401).json({ error: 'No token provided' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'your-jwt-secret');
+        res.json({ valid: true, user: decoded });
+    } catch (error) {
+        res.status(401).json({ valid: false, error: 'Invalid token' });
+    }
+};
 
 // Prihlásenie používateľa
 exports.login = async (req, res) => {
