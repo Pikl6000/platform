@@ -6,6 +6,7 @@ const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const db = require('./models');
 
 const app = express();
 app.use(express.json());

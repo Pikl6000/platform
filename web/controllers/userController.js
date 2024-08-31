@@ -1,4 +1,4 @@
-const User = require('../models/user'); // Import modelu používateľa
+const db = require('../models');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
@@ -6,7 +6,7 @@ const { Op } = require('sequelize');
 // Získanie všetkých používateľov
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.findAll();
+        const users = await db.User.findAll();
         res.json(users);
     } catch (error) {
         console.error('Error fetching users:', error);
@@ -20,7 +20,7 @@ exports.getAllUsersWithout = async (req, res) => {
         const currentUserId = req.user.id; // Alebo použite priamo req.user, ak máte k dispozícii celé objekt používateľa
 
         // Nájdeme všetkých používateľov okrem prihláseného používateľa
-        const users = await User.findAll({
+        const users = await db.User.findAll({
             where: {
                 id: { [Op.ne]: currentUserId }
             }
@@ -36,7 +36,7 @@ exports.getAllUsersWithout = async (req, res) => {
 // Získanie konkrétneho používateľa podľa ID
 exports.getUserById = async (req, res) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const user = await db.User.findByPk(req.params.id);
         if (!user) return res.status(404).send('User not found');
         res.json(user);
     } catch (error) {
@@ -55,7 +55,7 @@ exports.registerUser = async (req, res) => {
 
     try {
         // Skontrolujte, či už používateľ s týmto emailom existuje
-        const existingUser = await User.findOne({ where: { email } });
+        const existingUser = await db.User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).send('User already exists');
         }
@@ -64,7 +64,7 @@ exports.registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Vytvorenie nového používateľa
-        const user = await User.create({
+        const user = await db.User.create({
             email,
             password: hashedPassword,
             name,
@@ -90,7 +90,7 @@ exports.loginUser = async (req, res) => {
 
     try {
         // Skontrolujte, či používateľ existuje
-        const user = await User.findOne({ where: { email } });
+        const user = await db.User.findOne({ where: { email } });
 
         if (!user) {
             return res.status(401).send('Invalid email or password');
@@ -123,7 +123,7 @@ exports.loginUser = async (req, res) => {
 // Aktualizácia používateľa
 exports.updateUser = async (req, res) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const user = await db.User.findByPk(req.params.id);
         if (!user) return res.status(404).send('User not found');
 
         const { name, lastname, email, password } = req.body;
@@ -143,7 +143,7 @@ exports.updateUser = async (req, res) => {
 // Zmazanie používateľa
 exports.deleteUser = async (req, res) => {
     try {
-        const user = await User.findByPk(req.params.id);
+        const user = await db.User.findByPk(req.params.id);
         if (!user) return res.status(404).send('User not found');
 
         await user.destroy();

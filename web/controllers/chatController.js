@@ -1,6 +1,4 @@
-const Chat = require('../models/chat');
-const Message = require('../models/message');
-const User = require('../models/user');
+const db = require('../models');
 const { Op } = require('sequelize');
 
 exports.getChatsForUser = async (req, res) => {
@@ -8,11 +6,11 @@ exports.getChatsForUser = async (req, res) => {
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
+        console.log('2');
 
         const userId = req.user.id;
-        console.log('User ID:', userId);
 
-        const chats = await Chat.findAll({
+        const chats = await db.Chat.findAll({
             where: {
                 [Op.or]: [
                     { sender_id: userId },
@@ -20,10 +18,18 @@ exports.getChatsForUser = async (req, res) => {
                 ]
             },
             include: [
-                { model: User, as: 'sender', attributes: ['id', 'name', 'lastname'] },
-                { model: User, as: 'recipient', attributes: ['id', 'name', 'lastname'] }
+                { model: db.User, as: 'sender', attributes: ['id', 'name', 'lastname'] },
+                { model: db.User, as: 'recipient', attributes: ['id', 'name', 'lastname'] }
             ]
         });
+        console.log('2');
+
+        console.log('Fetched chats:', chats.map(chat => ({
+            chatId: chat.id,
+            sender: chat.sender ? chat.sender.dataValues : null,
+            recipient: chat.recipient ? chat.recipient.dataValues : null
+        })));
+
 
         const chatUsers = chats.map(chat => {
             const isSender = chat.sender_id === userId;
@@ -32,16 +38,20 @@ exports.getChatsForUser = async (req, res) => {
                 chatId: chat.id,
                 userId: otherUser.id,
                 name: otherUser.name,
-                lastname: otherUser.lastname
+                lastname: otherUser.lastname,
+                chatname: chat.name,
             };
         });
+        console.log('2');
 
+        console.log('Chat Users:', chatUsers);
         res.json(chatUsers);
     } catch (error) {
         console.error('Error fetching chats:', error);
         res.status(500).send('Server error');
     }
 };
+
 
 
 // Funkcia na získanie alebo vytvorenie chatu medzi dvoma používateľmi
@@ -55,7 +65,7 @@ exports.getOrCreateChat = async (req, res) => {
         }
 
         // Skontroluj, či už existuje chat medzi týmito používateľmi
-        let chat = await Chat.findOne({
+        let chat = await db.Chat.findOne({
             where: {
                 [Op.or]: [
                     { sender_id: userId1, recipient_id: userId2 },
@@ -66,19 +76,36 @@ exports.getOrCreateChat = async (req, res) => {
 
         // Ak chat neexistuje, vytvor nový
         if (!chat) {
-            chat = await Chat.create({
+            // Načítanie mien používateľov
+            const user1 = await db.User.findByPk(userId1, {
+                attributes: ['name', 'lastname']
+            });
+            const user2 = await db.User.findByPk(userId2, {
+                attributes: ['name', 'lastname']
+            });
+
+            if (!user1 || !user2) {
+                return res.status(400).send('Invalid user IDs');
+            }
+
+            const chatName = `${user1.name} ${user1.lastname} - ${user2.name} ${user2.lastname}`;
+
+            // Vytvorenie nového chatu
+            chat = await db.Chat.create({
                 sender_id: userId1,
-                recipient_id: userId2
+                recipient_id: userId2,
+                name: chatName // Uloženie názvu chatu
             });
         }
 
-        // Vráť ID chatu
-        res.json({ chatId: chat.id });
+        // Vráť ID chatu a názov chatu
+        res.json({ chatId: chat.id, name: chat.name });
     } catch (error) {
         console.error('Error creating or fetching chat:', error);
         res.status(500).send('Server error');
     }
 };
+
 
 // Funkcia na získanie správ pre daný chat
 exports.getMessages = async (req, res) => {
@@ -86,7 +113,7 @@ exports.getMessages = async (req, res) => {
         const chatId = req.params.chatId; // ID chatu
 
         // Získaj všetky správy pre daný chat
-        const messages = await Message.findAll({
+        const messages = await db.Message.findAll({
             where: { chatId: chatId },
             order: [['sendTime', 'ASC']]
         });
@@ -108,7 +135,7 @@ exports.sendMessage = async (req, res) => {
     }
 
     try {
-        const newMessage = await Message.create({
+        const newMessage = await db.Message.create({
             from: senderId,
             to: req.body.to, // Predpokladáme, že ID príjemcu je odoslané v tele požiadavky
             chatId,

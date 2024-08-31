@@ -26,8 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
 
         loadData();
-
-
     });
 
     document.getElementById('chats').addEventListener('click', async function() {
@@ -35,8 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
 
         loadChatData();
-
-
     });
 
     loadChatData();
@@ -124,6 +120,7 @@ async function loadChat() {
     if (!await verifyToken()){
         window.location.assign('login.html');
         alert("Error, please login again");
+        return;
     }
 
     try {
@@ -176,6 +173,7 @@ async function loadData() {
     if (!await verifyToken()){
         window.location.assign('login.html');
         alert("Error, please login again");
+        return;
     }
 
     try {
@@ -232,65 +230,45 @@ async function loadData() {
 }
 
 async function loadChatData() {
-    if (!await verifyToken()){
-        window.location.assign('login.html');
-        alert("Error, please login again");
-    }
+    let token = localStorage.getItem('token');
+    let data = await fetchWithToken('http://localhost:3000/api/chats/chats', token);
 
-    try {
-        // Načítaj token z localStorage
-        let token = localStorage.getItem('token');
-
-        // Volanie funkcie na načítanie chatov a používateľov
-        let response = await fetchWithToken('http://localhost:3000/api/chats/chats', token);
-        let data = await response.json(); // Získaj JSON z odpovede
-
-        if (!data) {
-            // Ak sa token nedá použiť, pokús sa o obnovu tokenu
-            token = await refreshAccessToken();
-            if (!token) throw new Error('Unable to refresh token');
-
-            // Volanie funkcie na načítanie dát s obnoveným tokenom
-            response = await fetchWithToken('http://localhost:3000/api/chats/chats', token);
-            data = await response.json();
-            if (!data || data.error) throw new Error('Unable to fetch data after refreshing token');
-        }
-
-        // Pokračuj s načítanými dátami
-        console.log(data);
-
-        const container = document.querySelector('.selection');
-        container.innerHTML = '';
-
-        const h = document.createElement('h1');
-        h.classList.add('chat-text');
-        h.textContent = "Chats";
-        container.appendChild(h);
-
-        // Vytvorenie zoznamu (ul element)
-        const ul = document.createElement('ul');
-        ul.classList.add('list-group');
-
-        // Iterácia cez chaty a ich pridanie do zoznamu
-        data.forEach(chat => {
-            const li = document.createElement('li');
-            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
-            li.dataset.chatId = chat.chatId; // Použitie data atribútu pre chatId
-
-            const userName = document.createElement('span');
-            userName.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
-            userName.textContent = `${chat.name} ${chat.lastname}`;
-            li.appendChild(userName);
-
-            ul.appendChild(li);
-        });
-
-        // Pridanie zoznamu do kontajnera
-        container.appendChild(ul);
-    } catch (error) {
-        console.error('There was a problem with the fetch operation:', error);
+    if (data) {
+        console.log('Chat data:', data);
+        displayChatData(data); // Volanie funkcie na zobrazenie alebo ďalšie spracovanie dát
+    } else {
+        console.error('No data received');
     }
 }
+
+function displayChatData(chats) {
+    const container = document.querySelector('.selection');
+    container.innerHTML = '';
+
+    const h = document.createElement('h1');
+    h.classList.add('chat-text');
+    h.textContent = "Chats";
+    container.appendChild(h);
+
+    const ul = document.createElement('ul');
+    ul.classList.add('list-group');
+
+    chats.forEach(chat => {
+        const li = document.createElement('li');
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+        li.dataset.chatId = chat.chatId;
+
+        const userName = document.createElement('span');
+        userName.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
+        userName.textContent = `${chat.chatname}`;
+        li.appendChild(userName);
+
+        ul.appendChild(li);
+    });
+
+    container.appendChild(ul);
+}
+
 
 // Funkcia na načítanie dát s daným tokenom
 async function fetchWithToken(url, token) {
@@ -300,6 +278,10 @@ async function fetchWithToken(url, token) {
             credentials: "include"
         });
 
+        console.log('Response:', response);
+        console.log('Response Status:', response.status);
+        console.log('Response Status Text:', response.statusText);
+
         if (!response.ok) {
             const errorText = await response.text(); // Získajte text odpovede pre podrobnejšie chybové správy
             console.error('Fetch error:', errorText);
@@ -307,12 +289,15 @@ async function fetchWithToken(url, token) {
             throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
-        return await response.json(); // Vráti načítané dáta
+        const data = await response.json(); // Vráti načítané dáta
+        console.log('Fetched Data:', data);
+        return data;
     } catch (error) {
         console.error('Fetch error:', error);
         return null;
     }
 }
+
 
 
 // Funkcia na obnovu tokenu
