@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.selection').addEventListener('click', async function(event) {
         if (event.target.classList.contains('user-list-item')) {
             const userId = event.target.id;
-            document.querySelector('.user-text-info-text').textContent = event.target.textContent.trim();
 
             try {
                 const response = await fetch(`http://localhost:3000/api/chats/chat/${userId}`, {
@@ -52,14 +51,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to create or fetch chat');
                     window.location.assign('login.html');
+                    throw new Error('Failed to create or fetch chat');
                 }
 
                 const { chatId } = await response.json();
 
                 // Oznám úspešné vytvorenie alebo načítanie chatu
                 alert(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
+                window.location.assign('index.html');
 
                 // Alternatívne môžeš použiť napríklad konzolový výstup:
                 console.log(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
@@ -67,6 +67,52 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error('Error creating or fetching chat:', error);
                 alert('Nastala chyba pri vytváraní alebo načítaní chatu.');
+            }
+        }
+    });
+
+    document.querySelector('.selection').addEventListener('click', async function(event) {
+        if (event.target.classList.contains('chat-list-item')) {
+            // Získaj ID chatu z atribútu dataset
+            const chatId = event.target.dataset.chatId;
+            const recipientId = event.target.dataset.userId; // Predpokladám, že tu máš ID príjemcu
+
+            // Nastav text obsahujúci názov chatu
+            document.querySelector('.user-text-info-text').textContent = event.target.textContent.trim();
+
+            // Nastav data-chat-id a data-recipient-id
+            document.querySelector('.user-text-info-text').setAttribute('data-chat-id', chatId);
+            document.querySelector('.user-text-info-text').setAttribute('data-recipient-id', recipientId);
+
+            try {
+                // Načítaj správy pre tento chat
+                const token = localStorage.getItem('token');
+                const messagesResponse = await fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                if (!messagesResponse.ok) {
+                    if (messagesResponse.status === 401) {
+                        window.location.assign('login.html');
+                    }
+                    throw new Error('Failed to fetch messages for the chat');
+                }
+
+                const messages = await messagesResponse.json();
+
+                // Zobraz správy v UI
+                displayMessages(messages);
+
+                document.getElementById('chatId').value = chatId;
+
+            } catch (error) {
+                console.error('Error fetching chat messages:', error);
+                alert('Nastala chyba pri načítaní správ z chatu.');
             }
         }
     });
@@ -255,8 +301,9 @@ function displayChatData(chats) {
 
     chats.forEach(chat => {
         const li = document.createElement('li');
-        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'chat-list-item');
         li.dataset.chatId = chat.chatId;
+        li.dataset.userId = chat.userId;
 
         const userName = document.createElement('span');
         userName.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
@@ -321,10 +368,11 @@ async function refreshAccessToken() {
 }
 
 document.getElementById('sendButton').addEventListener('click', async () => {
-    // Získanie hodnoty z input polí
     const message = document.getElementById('message').value;
-    const chatId = document.getElementById('chatId').value;
-    const receiverId = document.getElementById('receiverId').value;
+    const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
+    const recipientId = document.querySelector('.user-text-info-text').dataset.recipientId;
+    console.log('Chat ID:', chatId);
+    console.log('Recipient ID:', recipientId);
 
     if (!message.trim()) {
         alert('Message cannot be empty');
@@ -332,9 +380,8 @@ document.getElementById('sendButton').addEventListener('click', async () => {
     }
 
     try {
-        const token = localStorage.getItem('token'); // Získanie tokenu z localStorage
+        const token = localStorage.getItem('token');
 
-        // Odošli správu na server
         const response = await fetch('http://localhost:3000/api/chats/message', {
             method: 'POST',
             headers: {
@@ -344,7 +391,7 @@ document.getElementById('sendButton').addEventListener('click', async () => {
             body: JSON.stringify({
                 chatId,
                 message,
-                to: receiverId // ID príjemcu
+                to: recipientId
             })
         });
 
@@ -355,12 +402,29 @@ document.getElementById('sendButton').addEventListener('click', async () => {
         const data = await response.json();
         console.log('Message sent:', data);
 
-        // Vyčistenie input pola správy
+        // Po odoslaní správy načítaj správy znova, aby si aktualizoval chat s novou správou
+        const messagesResponse = await fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+
+        if (messagesResponse.ok) {
+            const messages = await messagesResponse.json();
+            displayMessages(messages);
+        }
+
+        // Vyčisti input pole správy
         document.getElementById('message').value = '';
+
     } catch (error) {
         console.error('Error sending message:', error);
     }
 });
+
 
 async function verifyToken() {
     const token = localStorage.getItem('token');

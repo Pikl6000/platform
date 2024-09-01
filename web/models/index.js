@@ -6,6 +6,7 @@ const db = {};
 // Načítajte modely
 db.User = require('./user')(sequelize, Sequelize.DataTypes);
 db.Chat = require('./chat')(sequelize, Sequelize.DataTypes);
+db.Message = require('./message')(sequelize, Sequelize.DataTypes);
 
 // Nastavenie asociácií
 db.User.associate(db);

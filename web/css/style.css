@@ -85,7 +85,7 @@ nav{
     text-align: center;
 }
 
-.user-list-item {
+.user-list-item, .chat-list-item {
     min-width: 250px;
     height: 60px;
 }

@@ -127,17 +127,20 @@ exports.getMessages = async (req, res) => {
 
 // Funkcia na odoslanie správy
 exports.sendMessage = async (req, res) => {
-    const { chatId, message } = req.body;
-    const senderId = req.user.id; // Získaj ID prihláseného používateľa
+    const { chatId, message, to } = req.body;
+    const senderId = req.user.id;
 
-    if (!chatId || !message) {
-        return res.status(400).send('Chat ID and message are required');
+    console.log("recipient_id:", to);
+    console.log("sender_id:", senderId);
+
+    if (!chatId || !message || !to) {  // Skontroluj, či `recipient_id` existuje
+        return res.status(400).send('Chat ID, recipient, and message are required');
     }
 
     try {
         const newMessage = await db.Message.create({
-            from: senderId,
-            to: req.body.to, // Predpokladáme, že ID príjemcu je odoslané v tele požiadavky
+            sender_id: senderId,
+            recipient_id: to,
             chatId,
             message
         });
