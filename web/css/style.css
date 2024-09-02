@@ -3,6 +3,35 @@ html, body {
     margin: 0;
     padding: 0;
     background-color: #242629;
+    overflow: hidden;
+}
+
+.background-gradient {
+    width: 100%;
+    height: 100%;
+    --s: 100px; /* control the size */
+    --c1: #ff8afc;
+    --c2: #1b1b3a;
+
+    --_g: var(--c2) 6% 14%, var(--c1) 16% 24%, var(--c2) 26% 34%,
+    var(--c1) 36% 44%, var(--c2) 46% 54%, var(--c1) 56% 64%, var(--c2) 66% 74%,
+    var(--c1) 76% 84%, var(--c2) 86% 94%;
+    background: radial-gradient(
+            100% 100% at 100% 0,
+            var(--c1) 4%,
+            var(--_g),
+            #0008 96%,
+            #0000
+    ),
+    radial-gradient(
+            100% 100% at 0 100%,
+            #0000,
+            #0008 4%,
+            var(--_g),
+            var(--c1) 96%
+    )
+    var(--c1);
+    background-size: var(--s) var(--s);
 }
 
 .container {
@@ -10,10 +39,10 @@ html, body {
     flex-flow: row;
 }
 
-
  /*Sidebar*/
 .sidebar {
-    background: #242629;
+    /*background: #242629;*/
+    background: rgba(36, 38, 41, 0.96);
     height: 100vh;
     padding-top: 1rem;
     flex-shrink: 0;
@@ -85,8 +114,8 @@ nav{
     text-align: center;
 }
 
-.user-list-item, .chat-list-item {
-    min-width: 250px;
+.user-list-item{
+    min-width: 150px;
     height: 60px;
 }
 
@@ -112,7 +141,8 @@ nav{
 
 .main-content {
     flex-grow: 1;
-    background: #242629;
+    /*background: #242629;*/
+    background: rgba(36, 38, 41, 0.96);
 }
 
 .thumbnail-img {
@@ -130,9 +160,9 @@ nav{
 }
 
 
-/*.message-bar {*/
-/*    height: 75px;*/
-/*}*/
+.message-bar {
+    height: 45px;
+}
 
 .user-text-info-text {
     color: #fffffe;
@@ -140,9 +170,8 @@ nav{
 }
 
 .chat-bar {
-    /*height: 80px;*/
+    height: 90px;
 }
-
 
 .message-bar .container {
     display: flex;
@@ -156,4 +185,55 @@ nav{
 
 .message-bar .btn {
     flex-shrink: 0;
+}
+
+
+/*Chat Messages*/
+
+.messages-box {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 165px);
+    overflow: auto;
+}
+
+.messages-chat-group {
+    flex-grow: 1;
+    padding: 10px;
+    box-sizing: border-box;
+    overflow: auto;
+    margin: 0;
+    list-style: none;
+}
+
+.chat-list-item {
+    margin: 0.5rem 0;
+}
+
+.chat-list-item-recipient {
+    background: #fffffe!important;
+    word-wrap: break-word;
+
+    font-family: 'Arial', sans-serif;
+    font-size: 1rem;
+    color: #242629;
+    line-height: 1.5;
+    font-weight: bold;
+}
+
+.chat-list-item-sender {
+    background: #fffffe!important;
+    word-wrap: break-word;
+
+    font-family: 'Arial', sans-serif;
+    font-size: 1rem;
+    color: #242629;
+    line-height: 1.5;
+    font-weight: bold;
+}
+
+.chat-list-item {
+    min-width: 150px;
+    height: 60px;
+    border-radius: 10px;
 }

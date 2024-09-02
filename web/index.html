@@ -10,7 +10,7 @@
     </head>
     <body>
 
-    <div class="container-fluid d-flex p-0 m-0">
+    <div class="container-fluid d-flex p-0 m-0 background-gradient">
         <header class="sidebar full-height">
             <nav>
                 <ul class="sidebar-elements">
@@ -60,19 +60,17 @@
 
                     <!--Messages-->
                     <div class="messages-box flex-grow-1">
-                        <div class="container-fluid">
+                        <div class="container-fluid messages-box-list">
 
                         </div>
                     </div>
 
                     <!--Message Bar-->
-                    <div class="message-bar pb-2">
+                    <div class="message-bar">
                         <div class="container-fluid">
                             <div class="d-flex align-items-center">
                                 <div class="form-group flex-grow-1 m-0">
                                     <input type="text" class="form-control" id="message" placeholder="Enter your message">
-                                    <input type="hidden" id="chatId" value="123">
-                                    <input type="hidden" id="receiverId" value="456">
                                 </div>
                                 <button id="sendButton" class="btn btn-primary ms-2">Send</button>
                             </div>

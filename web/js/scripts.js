@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.querySelector('.selection');
         container.innerHTML = '';
 
-        loadChatData();
+        await loadChatData();
     });
 
     loadChatData();
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target.classList.contains('chat-list-item')) {
             // Získaj ID chatu z atribútu dataset
             const chatId = event.target.dataset.chatId;
-            const recipientId = event.target.dataset.userId; // Predpokladám, že tu máš ID príjemcu
+            const recipientId = event.target.dataset.userId;
 
             // Nastav text obsahujúci názov chatu
             document.querySelector('.user-text-info-text').textContent = event.target.textContent.trim();
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Zobraz správy v UI
                 displayMessages(messages);
 
-                document.getElementById('chatId').value = chatId;
+                //document.getElementById('chatId').value = chatId;
 
             } catch (error) {
                 console.error('Error fetching chat messages:', error);
@@ -117,6 +117,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function loadMessages() {
+    const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
+    const token = localStorage.getItem('token');
+
+    fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(messages => {
+            displayMessages(messages); // Znovu vykresli správy
+        })
+        .catch(error => console.error('Error fetching messages:', error));
+}
+setInterval(loadMessages, 5000);
+
 
 document.addEventListener('DOMContentLoaded', () => {
     // Získaj všetky elementy s triedou 'user-list-item'
@@ -148,71 +168,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Funkcia na zobrazenie správ v UI
-function displayMessages(messages) {
-    const messagesContainer = document.querySelector('.messages-box .container-fluid');
-    messagesContainer.innerHTML = ''; // Vyčisti staré správy
-
-    messages.forEach(message => {
-        const messageElement = document.createElement('div');
-        messageElement.textContent = message.message; // Pridaj text správy
-        messagesContainer.appendChild(messageElement);
-    });
+function scrollToBottom() {
+    const messagesContainer = document.querySelector('.messages-box');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// Funkcia na zobrazenie správ v UI
+function displayMessages(messages) {
+    const recipientId = document.querySelector('.user-text-info-text').dataset.recipientId;
+    console.log('Recipient ID:', recipientId);
+    const messagesContainer = document.querySelector('.messages-box-list');
+    messagesContainer.innerHTML = ''; // Vyčisti staré správy
 
+    // Vytvorenie zoznamu (ul element)
+    const ul = document.createElement('ul');
+    ul.classList.add('messages-chat-group');
+    messagesContainer.appendChild(ul);
 
-async function loadChat() {
-    if (!await verifyToken()){
-        window.location.assign('login.html');
-        alert("Error, please login again");
-        return;
-    }
+    messages.forEach(message => {
+        const li = document.createElement('li');
 
-    try {
-        const token = localStorage.getItem('token');
-
-        const chatsResponse = await fetch('http://localhost:3000/api/chats/', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-
-        if (!chatsResponse.ok) throw new Error(`HTTP error! status: ${chatsResponse.status}`);
-
-        const { chats, currentUser } = await chatsResponse.json();
-        const userId = currentUser.id;
-
-        if (chats.length > 0) {
-            const firstChatId = chats[0].chatId;
-            const messagesResponse = await fetch(`http://localhost:3000/api/messages/${firstChatId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
-
-            if (!messagesResponse.ok) throw new Error(`HTTP error! status: ${messagesResponse.status}`);
-
-            const messages = await messagesResponse.json();
-
-            const messagesBox = document.querySelector('.messages-box .container-fluid');
-            messagesBox.innerHTML = '';
-
-            messages.forEach(msg => {
-                const messageElement = document.createElement('div');
-                messageElement.textContent = `${msg.message} (${msg.sendTime})`;
-                messagesBox.appendChild(messageElement);
-            });
+        if (recipientId == message.sender_id) {
+            li.classList.add('chat-list-item-sender', 'chat-list-item', 'list-group-item', 'd-flex', 'justify-content-start', 'ps-2', 'p-1', 'align-items-center');
         }
-    } catch (error) {
-        console.error('Error loading chat data:', error);
-    }
+        else {
+            li.classList.add('chat-list-item-recipient', 'chat-list-item', 'list-group-item', 'd-flex', 'justify-content-end', 'pe-2', 'p-1', 'align-items-center');
+        }
+
+        li.textContent = message.message;
+        console.log(message);
+        ul.appendChild(li);
+    });
+
+    scrollToBottom();
 }
 
 async function loadData() {
