@@ -61,8 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 alert('Registration successful!');
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('registerName').value = '';
+                document.getElementById('registerLastName').value = '';
                 showLogin();
             } else {
+                document.getElementById('registerEmail').value = '';
+                document.getElementById('registerPassword').value = '';
+                document.getElementById('registerName').value = '';
+                document.getElementById('registerLastName').value = '';
                 const errorText = await response.text();
                 alert(`Registration failed: ${errorText}`);
             }

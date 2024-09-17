@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('people').addEventListener('click', async function() {
         const container = document.querySelector('.selection');
         container.innerHTML = '';
-        document.getElementById('message').value = '';
+        removeChatData();
 
         loadData();
     });
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chats').addEventListener('click', async function() {
         const container = document.querySelector('.selection');
         container.innerHTML = '';
-        document.getElementById('message').value = '';
+        removeChatData();
 
         await loadChatData();
     });
@@ -181,11 +181,11 @@ function displayMessages(messages) {
     const recipientId = document.querySelector('.user-text-info-text').dataset.recipientId;
     console.log('Recipient ID:', recipientId);
     const messagesContainer = document.querySelector('.messages-box-list');
-    messagesContainer.innerHTML = ''; // Vyčisti staré správy
+    messagesContainer.innerHTML = '';
 
     // Vytvorenie zoznamu (ul element)
     const ul = document.createElement('ul');
-    ul.classList.add('messages-chat-group');
+    ul.classList.add('messages-chat-group', 'pb-2');
     messagesContainer.appendChild(ul);
 
     messages.forEach(message => {
@@ -204,7 +204,6 @@ function displayMessages(messages) {
     });
 
     scrollToBottom();
-    document.getElementById('message').value = '';
 }
 
 async function loadData() {
@@ -338,8 +337,6 @@ async function fetchWithToken(url, token) {
     }
 }
 
-
-
 // Funkcia na obnovu tokenu
 async function refreshAccessToken() {
     try {
@@ -360,6 +357,17 @@ async function refreshAccessToken() {
     }
 }
 
+function removeChatData(){
+    document.querySelector('.user-text-info-text').removeAttribute('data-chat-id');
+    document.querySelector('.user-text-info-text').removeAttribute('data-recipient-id');
+    document.querySelector('.user-text-info-text').textContent = '';
+
+    const messagesContainer = document.querySelector('.messages-box-list');
+    messagesContainer.innerHTML = '';
+
+    document.getElementById('message').value = '';
+}
+
 
 async function sendMessage() {
     const message = document.getElementById('message').value;
@@ -370,6 +378,10 @@ async function sendMessage() {
 
     if (!message.trim()) {
         alert('Message cannot be empty');
+        return;
+    }
+    else if (!chatId || !recipientId) {
+        alert('Open a Chat first!');
         return;
     }
 
@@ -418,7 +430,6 @@ async function sendMessage() {
         console.error('Error sending message:', error);
     }
 
-    // Vyčistenie inputu po odoslaní
     document.getElementById('message').value = '';
 }
 
