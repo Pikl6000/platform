@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('people').addEventListener('click', async function() {
         const container = document.querySelector('.selection');
         container.innerHTML = '';
+        document.getElementById('message').value = '';
 
         loadData();
     });
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('chats').addEventListener('click', async function() {
         const container = document.querySelector('.selection');
         container.innerHTML = '';
+        document.getElementById('message').value = '';
 
         await loadChatData();
     });
@@ -39,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('message').value = '';
     // Deleguj udalosti na rodičovský element
     document.querySelector('.selection').addEventListener('click', async function(event) {
         if (event.target.classList.contains('user-list-item')) {
@@ -201,6 +204,7 @@ function displayMessages(messages) {
     });
 
     scrollToBottom();
+    document.getElementById('message').value = '';
 }
 
 async function loadData() {
@@ -302,8 +306,9 @@ function displayChatData(chats) {
     });
 
     container.appendChild(ul);
-}
 
+    document.getElementById('message').value = '';
+}
 
 // Funkcia na načítanie dát s daným tokenom
 async function fetchWithToken(url, token) {
@@ -355,7 +360,8 @@ async function refreshAccessToken() {
     }
 }
 
-document.getElementById('sendButton').addEventListener('click', async () => {
+
+async function sendMessage() {
     const message = document.getElementById('message').value;
     const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
     const recipientId = document.querySelector('.user-text-info-text').dataset.recipientId;
@@ -411,8 +417,21 @@ document.getElementById('sendButton').addEventListener('click', async () => {
     } catch (error) {
         console.error('Error sending message:', error);
     }
-});
 
+    // Vyčistenie inputu po odoslaní
+    document.getElementById('message').value = '';
+}
+
+// Odoslanie správy tlačidlom
+document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+// Odoslanie správy klávesom Enter
+document.getElementById('message').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+        event.preventDefault();
+    }
+});
 
 async function verifyToken() {
     const token = localStorage.getItem('token');

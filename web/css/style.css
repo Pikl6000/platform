@@ -161,7 +161,8 @@ nav{
 
 
 .message-bar {
-    height: 45px;
+    /*height: 45px;*/
+
 }
 
 .user-text-info-text {
@@ -195,6 +196,35 @@ nav{
     flex-direction: column;
     height: calc(100vh - 165px);
     overflow: auto;
+}
+
+.messages-box-list {
+}
+
+.button-sent {
+    background: #f25f4c!important;
+    border-color: #f25f4c!important;
+}
+
+.message-input {
+    background: #0f0e17 !important;
+    border: none !important;
+    display: block;
+    width: 100%;
+    height: 2.4rem;
+    font-size: 1.2rem;
+    outline: none;
+    color: #fffffe;
+}
+
+.message-input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.message-bar-cont {
+    background:  #0f0e17!important;
+    border-radius: 2rem;
 }
 
 .messages-chat-group {
