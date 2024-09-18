@@ -87,9 +87,17 @@ nav{
     background: #16161a;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: scroll;
     flex-grow: 1;
-    max-height: 100%;
+    max-height: calc(100vh - 25px);
+
+    /* Pre WebKit prehliadače (Chrome, Safari) */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+}
+
+.selection::-webkit-scrollbar {
+    display: none; /* Skryje scrollbar v Chrome, Safari a WebKit */
 }
 
 .user-list {
@@ -117,9 +125,33 @@ nav{
     text-align: center;
 }
 
+.list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #1f1f1f;
+    color: #fff;
+    border-bottom: 1px solid #333;
+}
+
 .user-list-item{
     min-width: 150px;
     height: 60px;
+    flex-grow: 1;
+    white-space: nowrap;
+}
+
+ul.list-group {
+    overflow-y: auto;
+    flex-grow: 1;
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+ul.list-group::-webkit-scrollbar {
+    display: none;
 }
 
 .help{
@@ -155,15 +187,16 @@ nav{
 
 .list-user-item {
     color: black!important;
-    font-size: 16px;
-    font-weight: bold;
-    /*text-transform: uppercase;*/
+    font-size: 1rem!important;
+    font-weight: bold!important;
+    height: 50px;
     letter-spacing: 1px;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .list-group {
     overflow: auto;
+    height: 100%;
 }
 
 

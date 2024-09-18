@@ -125,18 +125,20 @@ function loadMessages() {
     const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
     const token = localStorage.getItem('token');
 
-    fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
-        method: 'GET',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => response.json())
-        .then(messages => {
-            displayMessages(messages); // Znovu vykresli správy
+    if (chatId){
+        fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         })
-        .catch(error => console.error('Error fetching messages:', error));
+            .then(response => response.json())
+            .then(messages => {
+                displayMessages(messages); // Znovu vykresli správy
+            })
+            .catch(error => console.error('Error fetching messages:', error));
+    }
 }
 setInterval(loadMessages, 5000);
 
@@ -237,7 +239,7 @@ async function loadData() {
         container.innerHTML = '';
 
         const h = document.createElement('h1');
-        h.classList.add('chat-text');
+        h.classList.add('chat-text', 'mb-1');
         h.textContent = "Users";
         container.appendChild(h);
 
@@ -283,7 +285,7 @@ function displayChatData(chats) {
     container.innerHTML = '';
 
     const h = document.createElement('h1');
-    h.classList.add('chat-text');
+    h.classList.add('chat-text', 'mb-1');
     h.textContent = "Chats";
     container.appendChild(h);
 
