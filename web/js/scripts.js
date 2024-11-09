@@ -557,8 +557,9 @@ async function loadProfile() {
         const ul = document.createElement('ul');
         ul.classList.add('list-group');
 
-        ul.appendChild(createListItem('User Profile', "profile"));
-        ul.appendChild(createListItem('Profile Settings', "settings"));
+        ul.appendChild(createListItem('User Information', "p-profile"));
+        ul.appendChild(createListItem('Profile Picture', "p-picture"));
+        ul.appendChild(createListItem('Profile Settings', "p-settings"));
 
         container.appendChild(ul);
 
