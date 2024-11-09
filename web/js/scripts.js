@@ -37,6 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
         await loadChatData();
     });
 
+    document.getElementById('profile').addEventListener('click', async function() {
+        const container = document.querySelector('.selection');
+        container.innerHTML = '';
+        removeChatData();
+
+        await loadProfile();
+    });
+
     loadChatData();
 });
 
@@ -366,6 +374,10 @@ function removeChatData(){
 
     const messagesContainer = document.querySelector('.messages-box-list');
     messagesContainer.innerHTML = '';
+    const container2 = document.querySelector('.message-bar');
+    container2.classList.remove('d-none');
+    const container3 = document.querySelector('.chat-bar');
+    container3.classList.remove('d-none');
 
     document.getElementById('message').value = '';
 }
@@ -474,5 +486,87 @@ async function verifyToken() {
     } catch (error) {
         console.error('Error verifying token:', error);
         return false;
+    }
+}
+
+
+// Profile page
+function parseJwt(token) {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+        atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+    );
+    return JSON.parse(jsonPayload);
+}
+
+function createListItem(text, id) {
+    const li = document.createElement('li');
+    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+    li.id = id;
+
+    const span = document.createElement('span');
+    span.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
+    span.textContent = text;
+    li.appendChild(span);
+
+    return li;
+}
+
+async function loadProfile() {
+    if (!await verifyToken()) {
+        window.location.assign('login.html');
+        alert("Error, please login again");
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+
+        const decodedToken = parseJwt(token);
+        const userId = decodedToken.id;
+
+        const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch profile data");
+
+        // Spracovanie JSON odpovede
+        const userData = await response.json();
+
+        const container = document.querySelector('.selection');
+        container.innerHTML = '';
+        const container2 = document.querySelector('.message-bar');
+        container2.classList.add('d-none');
+        const container3 = document.querySelector('.chat-bar');
+        container3.classList.add('d-none');
+
+        const h = document.createElement('h1');
+        h.classList.add('chat-text', 'mb-1');
+        h.textContent = "Settings";
+        container.appendChild(h);
+
+        const ul = document.createElement('ul');
+        ul.classList.add('list-group');
+
+        ul.appendChild(createListItem('User Profile', "profile"));
+        ul.appendChild(createListItem('Profile Settings', "settings"));
+
+        container.appendChild(ul);
+
+        console.log("GYAT");
+        console.log(userData);
+
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        alert("Failed to load profile data");
     }
 }
