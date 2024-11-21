@@ -67,12 +67,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const { chatId } = await response.json();
-
-                // Oznám úspešné vytvorenie alebo načítanie chatu
                 alert(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
                 window.location.assign('index.html');
 
-                // Alternatívne môžeš použiť napríklad konzolový výstup:
                 console.log(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
 
             } catch (error) {
@@ -116,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const messages = await messagesResponse.json();
 
-                // Zobraz správy v UI
                 displayMessages(messages);
 
                 //document.getElementById('chatId').value = chatId;
@@ -514,7 +510,7 @@ function createListItem(text, id) {
     return li;
 }
 
-async function createUserInformation(){
+async function createUserInformationPage(){
     if (!await verifyToken()) {
         window.location.assign('login.html');
         alert("Error, please login again");
@@ -539,14 +535,19 @@ async function createUserInformation(){
 
         // Get JSON
         const userData = await response.json();
+        console.log(userData);
+
 
         const container = document.querySelector('.messages-box-list');
+        container.innerHTML = '';
         const ul = document.createElement('ul');
+
+
         ul.classList.add('user-setting-list','user-setting-page');
 
         container.appendChild(ul);
         ul.appendChild(createListItem(`First Name : ${userData.name}`, "p-settings"));
-        ul.appendChild(createListItem(`Last Name : ${userData.lastName}`, "p-settings"));
+        ul.appendChild(createListItem(`Last Name : ${userData.lastname}`, "p-settings"));
         ul.appendChild(createListItem(`Email : ${userData.email}`, "p-settings"));
         ul.appendChild(createListItem(`Phone Number : ${userData.number}`, "p-settings"));
         ul.appendChild(createListItem(`Birthday : ${userData.birthday}`, "p-settings"));
@@ -555,12 +556,20 @@ async function createUserInformation(){
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        ul.appendChild(createListItem(`Profile Created : ${day}-${month}-${year}`, "p-settings"));
+        ul.appendChild(createListItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
     }
     catch (error) {
         console.error('There was a problem with the fetch operation:', error);
         alert("Failed to load profile data");
     }
+}
+
+async function createProfilePicturePage() {
+    alert("Picture");
+}
+
+async function createProfileSettingsPage() {
+    alert("Settings");
 }
 
 async function loadProfile() {
@@ -571,24 +580,6 @@ async function loadProfile() {
     }
 
     try {
-        // const token = localStorage.getItem('token');
-        //
-        // const decodedToken = parseJwt(token);
-        // const userId = decodedToken.id;
-        //
-        // const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
-        //     method: 'GET',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${token}`
-        //     }
-        // });
-        //
-        // if (!response.ok) throw new Error("Failed to fetch profile data");
-        //
-        // // Get JSON
-        // const userData = await response.json();
-
         // Create user setting buttons
         const container = document.querySelector('.selection');
         container.innerHTML = '';
@@ -605,14 +596,30 @@ async function loadProfile() {
         const ul = document.createElement('ul');
         ul.classList.add('user-setting-list');
 
-        ul.appendChild(createListItem('User Information', "p-profile"));
-        ul.appendChild(createListItem('Profile Picture', "p-picture"));
-        ul.appendChild(createListItem('Profile Settings', "p-settings"));
+        const userInfoItem = createListItem('User Information', "p-profile");
+        const profilePictureItem = createListItem('Profile Picture', "p-picture");
+        const profileSettingsItem = createListItem('Profile Settings', "p-settings");
+
+        ul.appendChild(userInfoItem);
+        ul.appendChild(profilePictureItem);
+        ul.appendChild(profileSettingsItem);
+
+        userInfoItem.addEventListener('click', () => {
+            createUserInformationPage();
+        });
+
+        profilePictureItem.addEventListener('click', () => {
+            createProfilePicturePage()
+        });
+
+        profileSettingsItem.addEventListener('click', () => {
+            createProfileSettingsPage();
+        });
 
         container.appendChild(ul);
 
         // Create user page
-        await createUserInformation();
+        await createUserInformationPage();
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
         alert("Failed to load profile data");
