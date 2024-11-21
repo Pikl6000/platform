@@ -146,9 +146,12 @@ nav{
 ul.list-group {
     overflow-y: auto;
     flex-grow: 1;
-
-    -ms-overflow-style: none;
     scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+    -ms-overflow-style: none;
 }
 
 ul.list-group::-webkit-scrollbar {
@@ -308,4 +311,32 @@ ul.list-group::-webkit-scrollbar {
     min-width: 150px;
     height: 60px;
     border-radius: 10px;
+}
+
+.user-setting-list {
+    overflow-y: auto;
+    flex-grow: 1;
+    scrollbar-width: none;
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
+.user-setting-list-item {
+    background: #fffffe!important;
+    margin-bottom: 0.5rem;
+    border-radius: 1rem;
+    padding: 1rem;
+    min-width: 150px;
+    height: 60px;
+    flex-grow: 1;
+    white-space: nowrap;
+}
+
+.user-setting-page {
+    margin-top: 0.7rem;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    background-color: #a7a9be;
 }

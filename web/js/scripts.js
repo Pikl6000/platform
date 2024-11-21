@@ -447,10 +447,8 @@ async function sendMessage() {
     document.getElementById('message').value = '';
 }
 
-// Odoslanie správy tlačidlom
+// Send message
 document.getElementById('sendButton').addEventListener('click', sendMessage);
-
-// Odoslanie správy klávesom Enter
 document.getElementById('message').addEventListener('keydown', function(event) {
     if (event.key === 'Enter') {
         sendMessage();
@@ -505,7 +503,7 @@ function parseJwt(token) {
 
 function createListItem(text, id) {
     const li = document.createElement('li');
-    li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+    li.classList.add('user-setting-list-item', 'd-flex', 'justify-content-between', 'align-items-center');
     li.id = id;
 
     const span = document.createElement('span');
@@ -516,14 +514,14 @@ function createListItem(text, id) {
     return li;
 }
 
-async function loadProfile() {
+async function createUserInformation(){
     if (!await verifyToken()) {
         window.location.assign('login.html');
         alert("Error, please login again");
         return;
     }
 
-    try {
+    try{
         const token = localStorage.getItem('token');
 
         const decodedToken = parseJwt(token);
@@ -539,9 +537,59 @@ async function loadProfile() {
 
         if (!response.ok) throw new Error("Failed to fetch profile data");
 
-        // Spracovanie JSON odpovede
+        // Get JSON
         const userData = await response.json();
 
+        const container = document.querySelector('.messages-box-list');
+        const ul = document.createElement('ul');
+        ul.classList.add('user-setting-list','user-setting-page');
+
+        container.appendChild(ul);
+        ul.appendChild(createListItem(`First Name : ${userData.name}`, "p-settings"));
+        ul.appendChild(createListItem(`Last Name : ${userData.lastName}`, "p-settings"));
+        ul.appendChild(createListItem(`Email : ${userData.email}`, "p-settings"));
+        ul.appendChild(createListItem(`Phone Number : ${userData.number}`, "p-settings"));
+        ul.appendChild(createListItem(`Birthday : ${userData.birthday}`, "p-settings"));
+
+        const date = new Date(userData.joineddate);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        ul.appendChild(createListItem(`Profile Created : ${day}-${month}-${year}`, "p-settings"));
+    }
+    catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        alert("Failed to load profile data");
+    }
+}
+
+async function loadProfile() {
+    if (!await verifyToken()) {
+        window.location.assign('login.html');
+        alert("Error, please login again");
+        return;
+    }
+
+    try {
+        // const token = localStorage.getItem('token');
+        //
+        // const decodedToken = parseJwt(token);
+        // const userId = decodedToken.id;
+        //
+        // const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
+        //     method: 'GET',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': `Bearer ${token}`
+        //     }
+        // });
+        //
+        // if (!response.ok) throw new Error("Failed to fetch profile data");
+        //
+        // // Get JSON
+        // const userData = await response.json();
+
+        // Create user setting buttons
         const container = document.querySelector('.selection');
         container.innerHTML = '';
         const container2 = document.querySelector('.message-bar');
@@ -555,7 +603,7 @@ async function loadProfile() {
         container.appendChild(h);
 
         const ul = document.createElement('ul');
-        ul.classList.add('list-group');
+        ul.classList.add('user-setting-list');
 
         ul.appendChild(createListItem('User Information', "p-profile"));
         ul.appendChild(createListItem('Profile Picture', "p-picture"));
@@ -563,9 +611,8 @@ async function loadProfile() {
 
         container.appendChild(ul);
 
-        console.log("GYAT");
-        console.log(userData);
-
+        // Create user page
+        await createUserInformation();
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
         alert("Failed to load profile data");
