@@ -81,6 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelector('.selection').addEventListener('click', async function(event) {
         if (event.target.classList.contains('chat-list-item')) {
+            // Remove selected state from other targets
+            document.querySelectorAll('.list-group-item-users-selected').forEach(item => {
+                item.classList.remove('list-group-item-users-selected');
+            });
+
+            event.target.classList.add('list-group-item-users-selected');
             // Získaj ID chatu z atribútu dataset
             const chatId = event.target.dataset.chatId;
             const recipientId = event.target.dataset.userId;
@@ -220,23 +226,17 @@ async function loadData() {
     }
 
     try {
-        // Načítaj token z localStorage
         let token = localStorage.getItem('token');
-
-        // Volanie funkcie na načítanie dát
         let data = await fetchWithToken('http://localhost:3000/api/users/', token);
 
         if (!data) {
-            // Ak sa token nedá použiť, pokús sa o obnovu tokenu
             token = await refreshAccessToken();
             if (!token) throw new Error('Unable to refresh token');
 
-            // Volanie funkcie na načítanie dát s obnoveným tokenom
             data = await fetchWithToken('http://localhost:3000/api/users/', token);
             if (!data) throw new Error('Unable to fetch data after refreshing token');
         }
 
-        // Pokračuj s načítanými dátami
         console.log(data);
 
         const container = document.querySelector('.selection');
@@ -254,11 +254,11 @@ async function loadData() {
         // Iterácia cez používateľov a ich pridanie do zoznamu
         data.forEach(user => {
             const li = document.createElement('li');
-            li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+            li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
             li.id = `${user.id}`;
 
             const userName = document.createElement('span');
-            userName.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
+            userName.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
             userName.textContent = `${user.name} ${user.lastname}`;
             li.appendChild(userName);
 
@@ -298,12 +298,12 @@ function displayChatData(chats) {
 
     chats.forEach(chat => {
         const li = document.createElement('li');
-        li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center', 'chat-list-item');
+        li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'chat-list-item');
         li.dataset.chatId = chat.chatId;
         li.dataset.userId = chat.userId;
 
         const userName = document.createElement('span');
-        userName.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
+        userName.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
         userName.textContent = `${chat.chatname}`;
         li.appendChild(userName);
 
@@ -503,6 +503,19 @@ function createListItem(text, id) {
     li.id = id;
 
     const span = document.createElement('span');
+    span.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
+    span.textContent = text;
+    li.appendChild(span);
+
+    return li;
+}
+
+function createUserItem(text, id) {
+    const li = document.createElement('li');
+    li.classList.add('user-setting-list-value', 'd-flex', 'justify-content-between', 'align-items-center');
+    li.id = id;
+
+    const span = document.createElement('span');
     span.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
     span.textContent = text;
     li.appendChild(span);
@@ -537,26 +550,29 @@ async function createUserInformationPage(){
         const userData = await response.json();
         console.log(userData);
 
-
         const container = document.querySelector('.messages-box-list');
         container.innerHTML = '';
         const ul = document.createElement('ul');
 
-
         ul.classList.add('user-setting-list','user-setting-page');
 
         container.appendChild(ul);
-        ul.appendChild(createListItem(`First Name : ${userData.name}`, "p-settings"));
-        ul.appendChild(createListItem(`Last Name : ${userData.lastname}`, "p-settings"));
-        ul.appendChild(createListItem(`Email : ${userData.email}`, "p-settings"));
-        ul.appendChild(createListItem(`Phone Number : ${userData.number}`, "p-settings"));
-        ul.appendChild(createListItem(`Birthday : ${userData.birthday}`, "p-settings"));
+        ul.appendChild(createUserItem(`First Name : ${userData.name}`, "p-settings"));
+        ul.appendChild(createUserItem(`Last Name : ${userData.lastname}`, "p-settings"));
+        ul.appendChild(createUserItem(`Email : ${userData.email}`, "p-settings"));
+        ul.appendChild(createUserItem(`Phone Number : ${userData.number}`, "p-settings"));
+
+        const date1 = new Date(userData.birthday);
+        const year1 = date1.getFullYear();
+        const month1 = String(date1.getMonth() + 1).padStart(2, '0');
+        const day1 = String(date1.getDate()).padStart(2, '0');
+        ul.appendChild(createUserItem(`Birthday : ${day1} ${month1} ${year1}`, "p-settings"));
 
         const date = new Date(userData.joineddate);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        ul.appendChild(createListItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
+        ul.appendChild(createUserItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
     }
     catch (error) {
         console.error('There was a problem with the fetch operation:', error);
@@ -565,11 +581,153 @@ async function createUserInformationPage(){
 }
 
 async function createProfilePicturePage() {
+    if (!await verifyToken()) {
+        window.location.assign('login.html');
+        alert("Error, please login again");
+        return;
+    }
+
+    try{
+        // const token = localStorage.getItem('token');
+        //
+        // const decodedToken = parseJwt(token);
+        // const userId = decodedToken.id;
+        //
+        // const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
+        //     method: 'GET',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //         'Authorization': `Bearer ${token}`
+        //     }
+        // });
+        //
+        // if (!response.ok) throw new Error("Failed to fetch profile data");
+        //
+        // // Get JSON
+        // const userData = await response.json();
+        // console.log(userData);
+        //
+        //
+        // const container = document.querySelector('.messages-box-list');
+        // container.innerHTML = '';
+        // const ul = document.createElement('ul');
+        //
+        //
+        // ul.classList.add('user-setting-list','user-setting-page');
+        //
+        // container.appendChild(ul);
+        // ul.appendChild(createListItem(`First Name : ${userData.name}`, "p-settings"));
+        // ul.appendChild(createListItem(`Last Name : ${userData.lastname}`, "p-settings"));
+        // ul.appendChild(createListItem(`Email : ${userData.email}`, "p-settings"));
+        // ul.appendChild(createListItem(`Phone Number : ${userData.number}`, "p-settings"));
+        // ul.appendChild(createListItem(`Birthday : ${userData.birthday}`, "p-settings"));
+        //
+        // const date = new Date(userData.joineddate);
+        // const year = date.getFullYear();
+        // const month = String(date.getMonth() + 1).padStart(2, '0');
+        // const day = String(date.getDate()).padStart(2, '0');
+        // ul.appendChild(createListItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
+    }
+    catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        alert("Failed to load profile data");
+    }
     alert("Picture");
 }
 
+
+function createEditItem(text, id, value) {
+    const li = document.createElement('li');
+    li.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+    li.id = id;
+
+    const form = document.createElement('form');
+    form.classList.add('form');
+    li.appendChild(form);
+
+    const fieldDiv = document.createElement('div');
+    fieldDiv.classList.add('field');
+    form.appendChild(fieldDiv);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.id = id;
+    input.required = true;
+    input.value = value;
+
+    const label = document.createElement('label');
+    label.textContent = text;
+    label.setAttribute('for', id);
+
+    fieldDiv.appendChild(input);
+    fieldDiv.appendChild(label);
+
+    return li;
+}
+
 async function createProfileSettingsPage() {
-    alert("Settings");
+    if (!await verifyToken()) {
+        window.location.assign('login.html');
+        alert("Error, please login again");
+        return;
+    }
+
+    try{
+        const token = localStorage.getItem('token');
+
+        const decodedToken = parseJwt(token);
+        const userId = decodedToken.id;
+
+        const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch profile data");
+
+        // Get JSON
+        const userData = await response.json();
+        console.log(userData);
+
+        const container = document.querySelector('.messages-box-list');
+        container.innerHTML = '';
+        const ul = document.createElement('ul');
+
+        ul.classList.add('user-setting-list','user-setting-page');
+
+        container.appendChild(ul);
+        ul.appendChild(createEditItem("First Name", "firstname-edit", userData.name));
+        ul.appendChild(createEditItem("Last Name", "lastname-edit", userData.lastname));
+        ul.appendChild(createEditItem("Phone Number", "phoneNumber-edit", userData.number));
+
+        // Save button
+        const button = document.createElement('input');
+        button.type = 'submit';
+        button.classList.add('submit-button');
+        button.value = 'Save';
+        ul.appendChild(button);
+
+        button.addEventListener('click', async function(){
+            const firstName = document.getElementById('firstname-edit').value;
+            const lastName = document.getElementById('lastname-edit').value;
+            const phoneNumber = document.getElementById('phoneNumber-edit').value;
+
+            if (!firstName || !lastName || !phoneNumber) {
+                alert("Please fill all fields");
+                return;
+            }
+        })
+
+
+
+    }
+    catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+        alert("Failed to load profile data");
+    }
 }
 
 async function loadProfile() {
@@ -597,6 +755,7 @@ async function loadProfile() {
         ul.classList.add('user-setting-list');
 
         const userInfoItem = createListItem('User Information', "p-profile");
+        userInfoItem.classList.add('user-setting-list-item-selected');
         const profilePictureItem = createListItem('Profile Picture', "p-picture");
         const profileSettingsItem = createListItem('Profile Settings', "p-settings");
 
@@ -606,14 +765,26 @@ async function loadProfile() {
 
         userInfoItem.addEventListener('click', () => {
             createUserInformationPage();
+
+            userInfoItem.classList.add('user-setting-list-item-selected');
+            profilePictureItem.classList.remove('user-setting-list-item-selected');
+            profileSettingsItem.classList.remove('user-setting-list-item-selected');
         });
 
         profilePictureItem.addEventListener('click', () => {
-            createProfilePicturePage()
+            createProfilePicturePage();
+
+            userInfoItem.classList.remove('user-setting-list-item-selected');
+            profilePictureItem.classList.add('user-setting-list-item-selected');
+            profileSettingsItem.classList.remove('user-setting-list-item-selected');
         });
 
         profileSettingsItem.addEventListener('click', () => {
             createProfileSettingsPage();
+
+            userInfoItem.classList.remove('user-setting-list-item-selected');
+            profilePictureItem.classList.remove('user-setting-list-item-selected');
+            profileSettingsItem.classList.add('user-setting-list-item-selected');
         });
 
         container.appendChild(ul);

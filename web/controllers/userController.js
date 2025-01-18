@@ -16,10 +16,8 @@ exports.getAllUsers = async (req, res) => {
 
 exports.getAllUsersWithout = async (req, res) => {
     try {
-        // Predpokladáme, že ID prihláseného používateľa je v req.user.id
-        const currentUserId = req.user.id; // Alebo použite priamo req.user, ak máte k dispozícii celé objekt používateľa
+        const currentUserId = req.user.id;
 
-        // Nájdeme všetkých používateľov okrem prihláseného používateľa
         const users = await db.User.findAll({
             where: {
                 id: { [Op.ne]: currentUserId }
@@ -70,7 +68,8 @@ exports.registerUser = async (req, res) => {
             name,
             lastname,
             joineddate,
-            lastonline
+            lastonline,
+            number
         });
 
         res.status(201).json(user);
