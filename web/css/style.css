@@ -347,11 +347,11 @@ ul.list-group::-webkit-scrollbar {
 }
 
 .user-setting-list-item-selected {
-    background: rgba(101, 103, 107, 0.56) !important;
+    background: #f25f4c !important;
 }
 
 .user-setting-list-item:hover {
-    background: #65676b !important;
+    background: #f25f4c !important;
 }
 
 .list-user-item-text {

@@ -175,4 +175,3 @@ exports.verifyToken = (req, res) => {
         res.status(400).send('Invalid Token');
     }
 };
-

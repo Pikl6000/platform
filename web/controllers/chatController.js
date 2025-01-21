@@ -151,3 +151,25 @@ exports.sendMessage = async (req, res) => {
         res.status(500).send('Server error');
     }
 };
+
+exports.updateChatName = async (req, res) => {
+    const { chatId, name } = req.body;
+
+    if (!chatId || !name || name.trim() === '') {
+        return res.status(400).json({ error: 'Not enough data' });
+    }
+
+    try {
+        const chat = await db.Chat.findByPk(chatId);
+        if (!chat) {
+            return res.status(404).json({ error: 'Chat not found' });
+        }
+
+        chat.name = name;
+        await chat.save();
+
+        res.json(chat);
+    } catch (error) {
+        console.error('Error updating chat name:', error);
+    }
+}

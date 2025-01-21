@@ -48,9 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadChatData();
 });
 
+// Create chat
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('message').value = '';
-    // Deleguj udalosti na rodičovský element
     document.querySelector('.selection').addEventListener('click', async function(event) {
         if (event.target.classList.contains('user-list-item')) {
             const userId = event.target.id;
@@ -67,14 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const { chatId } = await response.json();
-                alert(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
+                alert(`Chat ${chatId} was created or fetched.`);
                 window.location.assign('index.html');
 
-                console.log(`Chat s ID ${chatId} bol úspešne vytvorený alebo načítaný.`);
+                console.log(`Chat ${chatId} was created or fetched.`);
 
             } catch (error) {
                 console.error('Error creating or fetching chat:', error);
-                alert('Nastala chyba pri vytváraní alebo načítaní chatu.');
+                alert('Error occurred while creating or fetching chat. Please try again later.');
             }
         }
     });
@@ -87,19 +87,30 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             event.target.classList.add('list-group-item-users-selected');
-            // Získaj ID chatu z atribútu dataset
+            // Get ids
             const chatId = event.target.dataset.chatId;
             const recipientId = event.target.dataset.userId;
 
-            // Nastav text obsahujúci názov chatu
+            // Set help variables
             document.querySelector('.user-text-info-text').textContent = event.target.textContent.trim();
-
-            // Nastav data-chat-id a data-recipient-id
             document.querySelector('.user-text-info-text').setAttribute('data-chat-id', chatId);
             document.querySelector('.user-text-info-text').setAttribute('data-recipient-id', recipientId);
 
+            const container2 = document.querySelector('.user-text-info');
+
+            if (!container2.querySelector('img')) {
+                const image = document.createElement('img');
+                image.src = 'images/icons/edit.svg';
+                image.alt = 'Edit Icon';
+                image.classList.add('ps-3', 'chat-edit-button');
+                image.addEventListener('click', () => {
+                    editChatName();
+                });
+
+                container2.appendChild(image);
+            }
+
             try {
-                // Načítaj správy pre tento chat
                 const token = localStorage.getItem('token');
                 const messagesResponse = await fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
                     method: 'GET',
@@ -120,12 +131,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const messages = await messagesResponse.json();
 
                 displayMessages(messages);
-
-                //document.getElementById('chatId').value = chatId;
-
             } catch (error) {
                 console.error('Error fetching chat messages:', error);
-                alert('Nastala chyba pri načítaní správ z chatu.');
+                alert('Error occurred while fetching chat messages. Please try again later.');
             }
         }
     });
@@ -145,7 +153,7 @@ function loadMessages() {
         })
             .then(response => response.json())
             .then(messages => {
-                displayMessages(messages); // Znovu vykresli správy
+                displayMessages(messages);
             })
             .catch(error => console.error('Error fetching messages:', error));
     }
@@ -195,7 +203,7 @@ function displayMessages(messages) {
     const messagesContainer = document.querySelector('.messages-box-list');
     messagesContainer.innerHTML = '';
 
-    // Vytvorenie zoznamu (ul element)
+
     const ul = document.createElement('ul');
     ul.classList.add('messages-chat-group', 'pb-2');
     messagesContainer.appendChild(ul);
@@ -278,7 +286,7 @@ async function loadChatData() {
 
     if (data) {
         console.log('Chat data:', data);
-        displayChatData(data); // Volanie funkcie na zobrazenie alebo ďalšie spracovanie dát
+        displayChatData(data);
     } else {
         console.error('No data received');
     }
@@ -315,7 +323,6 @@ function displayChatData(chats) {
     document.getElementById('message').value = '';
 }
 
-// Funkcia na načítanie dát s daným tokenom
 async function fetchWithToken(url, token) {
     try {
         const response = await fetch(url, {
@@ -328,13 +335,13 @@ async function fetchWithToken(url, token) {
         console.log('Response Status Text:', response.statusText);
 
         if (!response.ok) {
-            const errorText = await response.text(); // Získajte text odpovede pre podrobnejšie chybové správy
+            const errorText = await response.text();
             console.error('Fetch error:', errorText);
-            if (response.status === 401) return null; // Token je neplatný
+            if (response.status === 401) return null;
             throw new Error(`Network response was not ok: ${response.status} ${response.statusText}`);
         }
 
-        const data = await response.json(); // Vráti načítané dáta
+        const data = await response.json();
         console.log('Fetched Data:', data);
         return data;
     } catch (error) {
@@ -354,9 +361,9 @@ async function refreshAccessToken() {
         if (response.ok) {
             const { token } = await response.json();
             localStorage.setItem('token', token);
-            return token; // Vráti obnovený token
+            return token;
         }
-        return null; // Ak sa token nedá obnoviť
+        return null;
     } catch (error) {
         console.error('Error refreshing token:', error);
         return null;
@@ -374,6 +381,9 @@ function removeChatData(){
     container2.classList.remove('d-none');
     const container3 = document.querySelector('.chat-bar');
     container3.classList.remove('d-none');
+    const img = document.querySelector('.chat-edit-button');
+    if (img) img.remove();
+
 
     document.getElementById('message').value = '';
 }
@@ -483,6 +493,55 @@ async function verifyToken() {
     }
 }
 
+async function editChatName() {
+    const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
+
+    // Check for open chat
+    if (!chatId) {
+        alert('Nie je vybraný žiadny chat!');
+        return;
+    }
+
+    // Get user input
+    const currentName = document.querySelector('.user-text-info-text').textContent.trim();
+    const newName = prompt('Zadajte nový názov chatu:', currentName);
+
+    if (!newName || newName.trim() === '' || newName.length > 20) {
+        alert('Enter valid name, no empty spaces and max 20 characters');
+        return;
+    }
+
+    // Try change to newName
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:3000/api/chats/update/${chatId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include',
+            body: JSON.stringify({ name: newName , chatId})
+        });
+
+        // Skontroluj odpoveď servera
+        if (response.ok) {
+            alert('Chat name changed successfully!');
+            document.querySelector('.user-text-info-text').textContent = newName;
+
+            // Reload page
+            removeChatData();
+            loadChatData();
+
+        } else {
+            alert('Error changing chat name!');
+        }
+    } catch (error) {
+        console.error('Error changing chat name:', error);
+        alert('Error changing chat name!');
+    }
+}
+
 
 // Profile page
 function parseJwt(token) {
@@ -581,6 +640,9 @@ async function createUserInformationPage(){
 }
 
 async function createProfilePicturePage() {
+    alert("This feature is not implemented yet. Please try again later.");
+    return;
+
     if (!await verifyToken()) {
         window.location.assign('login.html');
         alert("Error, please login again");
@@ -588,45 +650,6 @@ async function createProfilePicturePage() {
     }
 
     try{
-        // const token = localStorage.getItem('token');
-        //
-        // const decodedToken = parseJwt(token);
-        // const userId = decodedToken.id;
-        //
-        // const response = await fetch(`http://localhost:3000/api/users/profile/${userId}`, {
-        //     method: 'GET',
-        //     headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${token}`
-        //     }
-        // });
-        //
-        // if (!response.ok) throw new Error("Failed to fetch profile data");
-        //
-        // // Get JSON
-        // const userData = await response.json();
-        // console.log(userData);
-        //
-        //
-        // const container = document.querySelector('.messages-box-list');
-        // container.innerHTML = '';
-        // const ul = document.createElement('ul');
-        //
-        //
-        // ul.classList.add('user-setting-list','user-setting-page');
-        //
-        // container.appendChild(ul);
-        // ul.appendChild(createListItem(`First Name : ${userData.name}`, "p-settings"));
-        // ul.appendChild(createListItem(`Last Name : ${userData.lastname}`, "p-settings"));
-        // ul.appendChild(createListItem(`Email : ${userData.email}`, "p-settings"));
-        // ul.appendChild(createListItem(`Phone Number : ${userData.number}`, "p-settings"));
-        // ul.appendChild(createListItem(`Birthday : ${userData.birthday}`, "p-settings"));
-        //
-        // const date = new Date(userData.joineddate);
-        // const year = date.getFullYear();
-        // const month = String(date.getMonth() + 1).padStart(2, '0');
-        // const day = String(date.getDate()).padStart(2, '0');
-        // ul.appendChild(createListItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
     }
     catch (error) {
         console.error('There was a problem with the fetch operation:', error);

@@ -8,5 +8,6 @@ router.post('/chat/:userId', authenticateToken, chatController.getOrCreateChat);
 router.get('/messages/:chatId', authenticateToken, chatController.getMessages);
 router.post('/message', authenticateToken, chatController.sendMessage);
 router.get('/chats', authenticateToken, chatController.getChatsForUser);
+router.put('/update/:chatId', authenticateToken, chatController.updateChatName);
 
 module.exports = router;
