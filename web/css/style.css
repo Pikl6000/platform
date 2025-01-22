@@ -176,11 +176,14 @@ ul.list-group::-webkit-scrollbar {
 }
 
 .chat-text{
-    font-family: Arial, serif;
-    color: aliceblue;
+    color: aliceblue!important;
+    font-family: 'Poppins', sans-serif;
+    letter-spacing: 1.2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    font-size: 2.3rem;
+    font-weight: bold;
     margin: 0;
-    padding-left: 1rem;
-    padding-right: .5rem;
+    text-align: center;
 }
 
  /*Main Content*/
@@ -213,10 +216,7 @@ ul.list-group::-webkit-scrollbar {
     height: 100%;
 }
 
-
 .message-bar {
-    /*height: 45px;*/
-
 }
 
 .user-text-info-text {
@@ -295,26 +295,46 @@ ul.list-group::-webkit-scrollbar {
     margin: 0.5rem 0;
 }
 
-.chat-list-item-recipient {
-    background: #fffffe!important;
-    word-wrap: break-word;
+    /*Messages*/
+.message-item {
+    list-style-type: none;
+    margin: 5px 0;
+}
 
-    font-family: 'Arial', sans-serif;
+.message-box {
+    display: inline-block;
+    padding: 8px 12px;
+    border-radius: 10px;
+    max-width: 60%;
+    word-wrap: break-word;
+}
+
+.recipient-container {
+    text-align: left;
+}
+
+.sender-container {
+    text-align: right;
+}
+
+.chat-list-item-recipient {
+    background: #c3f0ca !important;
+    word-wrap: break-word;
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
-    color: #242629;
+    color: #0f0e17;
     line-height: 1.5;
-    font-weight: bold;
+    font-weight: 300;
 }
 
 .chat-list-item-sender {
-    background: #fffffe!important;
+    background: #fffffe !important;
     word-wrap: break-word;
-
-    font-family: 'Arial', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 1rem;
-    color: #242629;
+    color: #0f0e17;
     line-height: 1.5;
-    font-weight: bold;
+    font-weight: 300;
 }
 
 .chat-list-item {

@@ -191,6 +191,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+async function verifyToken() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        console.error('No token found in localStorage');
+        return false;
+    }
+
+    try {
+        const response = await fetch('http://localhost:3000/api/verify', {
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const result = await response.json();
+        if (result.valid) {
+            console.log('Token is valid');
+            return true;
+        } else {
+            console.log('Token is invalid');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error verifying token:', error);
+        return false;
+    }
+}
+
 function scrollToBottom() {
     const messagesContainer = document.querySelector('.messages-box');
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -210,16 +241,25 @@ function displayMessages(messages) {
 
     messages.forEach(message => {
         const li = document.createElement('li');
+        li.classList.add('message-item');
 
+        const container = document.createElement('div');
+
+        const text = document.createElement('span');
+
+        // Pridanie tried podľa odosielateľa
         if (recipientId == message.sender_id) {
-            li.classList.add('chat-list-item-sender', 'chat-list-item', 'list-group-item', 'd-flex', 'justify-content-start', 'ps-2', 'p-1', 'align-items-center');
-        }
-        else {
-            li.classList.add('chat-list-item-recipient', 'chat-list-item', 'list-group-item', 'd-flex', 'justify-content-end', 'pe-2', 'p-1', 'align-items-center');
+            text.classList.add('chat-list-item-recipient', 'message-box');
+            container.classList.add('recipient-container'); // Kontajner pre prijímateľa
+        } else {
+            text.classList.add('chat-list-item-sender', 'message-box');
+            container.classList.add('sender-container'); // Kontajner pre odosielateľa
         }
 
-        li.textContent = message.message;
-        console.log(message);
+        text.textContent = message.message;
+        container.appendChild(text);
+        li.appendChild(container);
+
         ul.appendChild(li);
     });
 
@@ -370,6 +410,7 @@ async function refreshAccessToken() {
     }
 }
 
+// Function that removes data showed on screen to prep for new content
 function removeChatData(){
     document.querySelector('.user-text-info-text').removeAttribute('data-chat-id');
     document.querySelector('.user-text-info-text').removeAttribute('data-recipient-id');
@@ -383,7 +424,8 @@ function removeChatData(){
     container3.classList.remove('d-none');
     const img = document.querySelector('.chat-edit-button');
     if (img) img.remove();
-
+    const container4 = document.querySelector('.messages-box');
+    container4.classList.remove('d-none');
 
     document.getElementById('message').value = '';
 }
@@ -428,7 +470,6 @@ async function sendMessage() {
         const data = await response.json();
         console.log('Message sent:', data);
 
-        // Po odoslaní správy načítaj správy znova, aby si aktualizoval chat s novou správou
         const messagesResponse = await fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
             method: 'GET',
             headers: {
@@ -443,7 +484,6 @@ async function sendMessage() {
             displayMessages(messages);
         }
 
-        // Vyčisti input pole správy
         document.getElementById('message').value = '';
 
     } catch (error) {
@@ -461,37 +501,6 @@ document.getElementById('message').addEventListener('keydown', function(event) {
         event.preventDefault();
     }
 });
-
-async function verifyToken() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        console.error('No token found in localStorage');
-        return false;
-    }
-
-    try {
-        const response = await fetch('http://localhost:3000/api/verify', {
-            headers: { Authorization: `Bearer ${token}` },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const result = await response.json();
-        if (result.valid) {
-            console.log('Token is valid');
-            return true;
-        } else {
-            console.log('Token is invalid');
-            return false;
-        }
-    } catch (error) {
-        console.error('Error verifying token:', error);
-        return false;
-    }
-}
 
 async function editChatName() {
     const chatId = document.querySelector('.user-text-info-text').dataset.chatId;
@@ -770,7 +779,7 @@ async function loadProfile() {
         container3.classList.add('d-none');
 
         const h = document.createElement('h1');
-        h.classList.add('chat-text', 'mb-1');
+        h.classList.add('chat-text', 'mb-2');
         h.textContent = "Settings";
         container.appendChild(h);
 
