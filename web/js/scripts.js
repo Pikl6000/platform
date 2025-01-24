@@ -3,6 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.assign('login.html');
     }
 
+    if (!verifyToken()){
+        alert("Error, please login again");
+        showLogin();
+    }
+
     // Logout
     document.getElementById('logout').addEventListener('click', async function() {
         try {
@@ -162,27 +167,22 @@ setInterval(loadMessages, 5000);
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Získaj všetky elementy s triedou 'user-list-item'
     const userItems = document.querySelectorAll('.user-list-item');
 
-    // Prejdi cez všetky elementy a pridaj 'click' event listener
     userItems.forEach(item => {
         item.addEventListener('click', async function() {
 
             try {
-                // Získaj ID chatu alebo vytvor nový
                 const response = await fetch(`http://localhost:3000/api/chats/chat/${userId}`, {
                     credentials: 'include'
                 });
                 const { chatId } = await response.json();
 
-                // Získaj správy pre tento chat
                 const messagesResponse = await fetch(`http://localhost:3000/api/chats/messages/${chatId}`, {
                     credentials: 'include'
                 });
                 const messages = await messagesResponse.json();
 
-                // Zobraz správy v UI
                 displayMessages(messages);
             } catch (error) {
                 console.error('Error fetching chat or messages:', error);
@@ -551,7 +551,6 @@ async function editChatName() {
     }
 }
 
-
 // Profile page
 function parseJwt(token) {
     const base64Url = token.split('.')[1];
@@ -578,19 +577,26 @@ function createListItem(text, id) {
     return li;
 }
 
-function createUserItem(text, id) {
+function createUserItem(text, id, value) {
     const li = document.createElement('li');
-    li.classList.add('user-setting-list-value', 'd-flex', 'justify-content-between', 'align-items-center');
+    li.classList.add('user-setting-list-value', 'd-flex', 'justify-content-start', 'align-items-center');
     li.id = id;
 
     const span = document.createElement('span');
-    span.classList.add('badge', 'rounded-pill', 'list-user-item', 'p-0');
+    span.classList.add('badge', 'rounded-pill', 'ps-3', 'user-text-prefix');
     span.textContent = text;
+
+    const span2 = document.createElement('span');
+    span2.classList.add('badge', 'rounded-pill', 'ps-3', 'user-text-value');
+    span2.textContent = value;
+
     li.appendChild(span);
+    li.appendChild(span2);
 
     return li;
 }
 
+// Load user data and display them
 async function createUserInformationPage(){
     if (!await verifyToken()) {
         window.location.assign('login.html');
@@ -625,22 +631,24 @@ async function createUserInformationPage(){
         ul.classList.add('user-setting-list','user-setting-page');
 
         container.appendChild(ul);
-        ul.appendChild(createUserItem(`First Name : ${userData.name}`, "p-settings"));
-        ul.appendChild(createUserItem(`Last Name : ${userData.lastname}`, "p-settings"));
-        ul.appendChild(createUserItem(`Email : ${userData.email}`, "p-settings"));
-        ul.appendChild(createUserItem(`Phone Number : ${userData.number}`, "p-settings"));
+        ul.appendChild(createUserItem(`First Name : `, "p-settings", userData.name));
+        ul.appendChild(createUserItem(`Last Name : `, "p-settings", userData.lastname));
+        ul.appendChild(createUserItem(`Email : `, "p-settings", userData.email));
+        ul.appendChild(createUserItem(`Phone Number : `, "p-settings", userData.number));
 
         const date1 = new Date(userData.birthday);
         const year1 = date1.getFullYear();
         const month1 = String(date1.getMonth() + 1).padStart(2, '0');
         const day1 = String(date1.getDate()).padStart(2, '0');
-        ul.appendChild(createUserItem(`Birthday : ${day1} ${month1} ${year1}`, "p-settings"));
+        const dateString1 = `${day1}.${month1}.${year1}`;
+        ul.appendChild(createUserItem(`Birthday : `, "p-settings", dateString1));
 
         const date = new Date(userData.joineddate);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        ul.appendChild(createUserItem(`Profile Created : ${day} ${month} ${year}`, "p-settings"));
+        const dateString = `${day}.${month}.${year}`;
+        ul.appendChild(createUserItem(`Profile Created : `, "p-settings", dateString));
     }
     catch (error) {
         console.error('There was a problem with the fetch operation:', error);
@@ -648,6 +656,9 @@ async function createUserInformationPage(){
     }
 }
 
+
+
+// TODO still not implemented
 async function createProfilePicturePage() {
     alert("This feature is not implemented yet. Please try again later.");
     return;
@@ -667,7 +678,7 @@ async function createProfilePicturePage() {
     alert("Picture");
 }
 
-
+// Helper function to create text elements for editable settings in profile
 function createEditItem(text, id, value) {
     const li = document.createElement('li');
     li.classList.add('d-flex', 'justify-content-between', 'align-items-center');
@@ -697,6 +708,7 @@ function createEditItem(text, id, value) {
     return li;
 }
 
+// Show editable user information with option to rewrite
 async function createProfileSettingsPage() {
     if (!await verifyToken()) {
         window.location.assign('login.html');
@@ -762,6 +774,7 @@ async function createProfileSettingsPage() {
     }
 }
 
+// Load profile section of page and generate new buttons
 async function loadProfile() {
     if (!await verifyToken()) {
         window.location.assign('login.html');
