@@ -24,6 +24,11 @@ module.exports = (sequelize) => {
         recipient_id: {
             type: DataTypes.INTEGER,
             allowNull: false
+        },
+        last_activity: {
+            type: DataTypes.DATE,
+            allowNull: false,
+            defaultValue: DataTypes.NOW
         }
     }, {
         timestamps: false,

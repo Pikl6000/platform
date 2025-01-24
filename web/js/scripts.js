@@ -163,7 +163,7 @@ function loadMessages() {
             .catch(error => console.error('Error fetching messages:', error));
     }
 }
-setInterval(loadMessages, 5000);
+setInterval(loadMessages, 3000);
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -325,12 +325,13 @@ async function loadChatData() {
     let data = await fetchWithToken('http://localhost:3000/api/chats/chats', token);
 
     if (data) {
-        console.log('Chat data:', data);
+        //console.log('Chat data:', data);
         displayChatData(data);
     } else {
         console.error('No data received');
     }
 }
+
 
 function displayChatData(chats) {
     const container = document.querySelector('.selection');
@@ -370,9 +371,9 @@ async function fetchWithToken(url, token) {
             credentials: "include"
         });
 
-        console.log('Response:', response);
-        console.log('Response Status:', response.status);
-        console.log('Response Status Text:', response.statusText);
+        // console.log('Response:', response);
+        // console.log('Response Status:', response.status);
+        // console.log('Response Status Text:', response.statusText);
 
         if (!response.ok) {
             const errorText = await response.text();

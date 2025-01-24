@@ -6,7 +6,6 @@ exports.getChatsForUser = async (req, res) => {
         if (!req.user || !req.user.id) {
             return res.status(401).json({ error: 'User not authenticated' });
         }
-        console.log('2');
 
         const userId = req.user.id;
 
@@ -20,16 +19,9 @@ exports.getChatsForUser = async (req, res) => {
             include: [
                 { model: db.User, as: 'sender', attributes: ['id', 'name', 'lastname'] },
                 { model: db.User, as: 'recipient', attributes: ['id', 'name', 'lastname'] }
-            ]
+            ],
+            order: [['last_activity', 'DESC']]
         });
-        console.log('2');
-
-        console.log('Fetched chats:', chats.map(chat => ({
-            chatId: chat.id,
-            sender: chat.sender ? chat.sender.dataValues : null,
-            recipient: chat.recipient ? chat.recipient.dataValues : null
-        })));
-
 
         const chatUsers = chats.map(chat => {
             const isSender = chat.sender_id === userId;
@@ -40,19 +32,16 @@ exports.getChatsForUser = async (req, res) => {
                 name: otherUser.name,
                 lastname: otherUser.lastname,
                 chatname: chat.name,
+                lastActivity: chat.last_activity
             };
         });
-        console.log('2');
 
-        console.log('Chat Users:', chatUsers);
         res.json(chatUsers);
     } catch (error) {
         console.error('Error fetching chats:', error);
         res.status(500).send('Server error');
     }
 };
-
-
 
 // Funkcia na získanie alebo vytvorenie chatu medzi dvoma používateľmi
 exports.getOrCreateChat = async (req, res) => {
@@ -133,7 +122,7 @@ exports.sendMessage = async (req, res) => {
     console.log("recipient_id:", to);
     console.log("sender_id:", senderId);
 
-    if (!chatId || !message || !to) {  // Skontroluj, či `recipient_id` existuje
+    if (!chatId || !message || !to) {
         return res.status(400).send('Chat ID, recipient, and message are required');
     }
 
@@ -144,6 +133,16 @@ exports.sendMessage = async (req, res) => {
             chatId,
             message
         });
+
+        // Update chat activity time
+        await db.Chat.update(
+            { last_activity: new Date() },
+            {
+                where: {
+                    id: chatId,
+                },
+            },
+        );
 
         res.status(201).json(newMessage);
     } catch (error) {
@@ -167,6 +166,16 @@ exports.updateChatName = async (req, res) => {
 
         chat.name = name;
         await chat.save();
+
+        // Update chat activity time
+        await db.Chat.update(
+            { last_activity: new Date() },
+            {
+                where: {
+                    id: chatId,
+                },
+            },
+        );
 
         res.json(chat);
     } catch (error) {
