@@ -1,6 +1,10 @@
 const db = require('../models');
 const { Op } = require('sequelize');
 
+function truncateText(text, maxLength) {
+    return text.length > maxLength ? text.substring(0, maxLength) + "." : text;
+}
+
 exports.getChatsForUser = async (req, res) => {
     try {
         if (!req.user || !req.user.id) {
@@ -46,8 +50,8 @@ exports.getChatsForUser = async (req, res) => {
 // Funkcia na získanie alebo vytvorenie chatu medzi dvoma používateľmi
 exports.getOrCreateChat = async (req, res) => {
     try {
-        const userId1 = req.user.id; // ID prihláseného používateľa
-        const userId2 = parseInt(req.params.userId, 10); // ID vybraného používateľa z parametra
+        const userId1 = req.user.id;
+        const userId2 = parseInt(req.params.userId, 10);
 
         if (!userId2 || userId1 === userId2) {
             return res.status(400).send('Invalid user ID');
@@ -65,7 +69,7 @@ exports.getOrCreateChat = async (req, res) => {
 
         // Ak chat neexistuje, vytvor nový
         if (!chat) {
-            // Načítanie mien používateľov
+            // Load Usernames
             const user1 = await db.User.findByPk(userId1, {
                 attributes: ['name', 'lastname']
             });
@@ -77,17 +81,17 @@ exports.getOrCreateChat = async (req, res) => {
                 return res.status(400).send('Invalid user IDs');
             }
 
-            const chatName = `${user1.name} ${user1.lastname} - ${user2.name} ${user2.lastname}`;
+            const chatName = truncateText(user1.name,6) +' '+ truncateText(user1.lastname,1) +'-' + truncateText(user2.name,6) +' '+ truncateText(user2.lastname,1);
 
-            // Vytvorenie nového chatu
+            // Create new chat
             chat = await db.Chat.create({
                 sender_id: userId1,
                 recipient_id: userId2,
-                name: chatName // Uloženie názvu chatu
+                name: chatName
             });
         }
 
-        // Vráť ID chatu a názov chatu
+        // Return chatID and name
         res.json({ chatId: chat.id, name: chat.name });
     } catch (error) {
         console.error('Error creating or fetching chat:', error);

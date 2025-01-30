@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 const { chatId } = await response.json();
-                alert(`Chat ${chatId} was created or fetched.`);
+                alert(`Chat was created.`);
                 window.location.assign('index.html');
 
                 console.log(`Chat ${chatId} was created or fetched.`);
@@ -114,6 +114,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 container2.appendChild(image);
             }
+
+            if (container2.querySelector('h3')) {
+                let name = document.querySelector('.username-text-info-text');
+                if (name) name.remove();
+            }
+
+            let nameContainer = document.createElement('h3');
+            nameContainer.classList.add('ps-2', 'mt-2', 'username-text-info-text');
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:3000/api/users/profile/${recipientId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch profile data");
+
+                // Get JSON
+                const userData = await response.json();
+                nameContainer.textContent = truncateText(userData.name,7) + ' ' + truncateText(userData.lastname,7);
+
+            } catch (e) {}
+            container2.appendChild(nameContainer);
 
             try {
                 const token = localStorage.getItem('token');
@@ -230,7 +257,7 @@ function scrollToBottom() {
 // Funkcia na zobrazenie správ v UI
 function displayMessages(messages) {
     const recipientId = document.querySelector('.user-text-info-text').dataset.recipientId;
-    console.log('Recipient ID:', recipientId);
+    //console.log('Recipient ID:', recipientId);
     const messagesContainer = document.querySelector('.messages-box-list');
     messagesContainer.innerHTML = '';
 
@@ -250,10 +277,10 @@ function displayMessages(messages) {
         // Pridanie tried podľa odosielateľa
         if (recipientId == message.sender_id) {
             text.classList.add('chat-list-item-recipient', 'message-box');
-            container.classList.add('recipient-container'); // Kontajner pre prijímateľa
+            container.classList.add('recipient-container');
         } else {
             text.classList.add('chat-list-item-sender', 'message-box');
-            container.classList.add('sender-container'); // Kontajner pre odosielateľa
+            container.classList.add('sender-container');
         }
 
         text.textContent = message.message;
@@ -295,11 +322,11 @@ async function loadData() {
         h.textContent = "Users";
         container.appendChild(h);
 
-        // Vytvorenie zoznamu (ul element)
+        // Create list
         const ul = document.createElement('ul');
         ul.classList.add('list-group');
 
-        // Iterácia cez používateľov a ich pridanie do zoznamu
+        // Add all users to element
         data.forEach(user => {
             const li = document.createElement('li');
             li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
@@ -307,17 +334,20 @@ async function loadData() {
 
             const userName = document.createElement('span');
             userName.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
-            userName.textContent = `${user.name} ${user.lastname}`;
-            li.appendChild(userName);
+            userName.textContent = truncateText(user.name,15)+' '+truncateText(user.lastname,10);
 
+            li.appendChild(userName);
             ul.appendChild(li);
         });
 
-        // Pridanie zoznamu do kontajnera
         container.appendChild(ul);
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
     }
+}
+
+function truncateText(text, maxLength) {
+    return text.length > maxLength ? text.substring(0, maxLength) + "." : text;
 }
 
 async function loadChatData() {
@@ -331,7 +361,6 @@ async function loadChatData() {
         console.error('No data received');
     }
 }
-
 
 function displayChatData(chats) {
     const container = document.querySelector('.selection');
@@ -425,6 +454,8 @@ function removeChatData(){
     container3.classList.remove('d-none');
     const img = document.querySelector('.chat-edit-button');
     if (img) img.remove();
+    const name = document.querySelector('.username-text-info-text');
+    if (name) name.remove();
     const container4 = document.querySelector('.messages-box');
     container4.classList.remove('d-none');
 
@@ -683,7 +714,6 @@ async function createProfilePicturePage() {
 function createEditItem(text, id, value) {
     const li = document.createElement('li');
     li.classList.add('d-flex', 'justify-content-between', 'align-items-center');
-    li.id = id;
 
     const form = document.createElement('form');
     form.classList.add('form');
@@ -717,7 +747,7 @@ async function createProfileSettingsPage() {
         return;
     }
 
-    try{
+    try {
         const token = localStorage.getItem('token');
 
         const decodedToken = parseJwt(token);
@@ -755,19 +785,57 @@ async function createProfileSettingsPage() {
         button.value = 'Save';
         ul.appendChild(button);
 
+        // Action for saving updated data
         button.addEventListener('click', async function(){
             const firstName = document.getElementById('firstname-edit').value;
             const lastName = document.getElementById('lastname-edit').value;
             const phoneNumber = document.getElementById('phoneNumber-edit').value;
 
+            // Check empty fields
             if (!firstName || !lastName || !phoneNumber) {
                 alert("Please fill all fields");
                 return;
             }
+
+            // Check for valid alphabet
+            const nameRegex = /^[a-zA-ZáčďéěíňóřšťúůýžÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ ]{1,50}$/;
+            if (!nameRegex.test(firstName) || !nameRegex.test(lastName)) {
+                alert("First name and last name must contain only letters (max 50 characters).");
+                return;
+            }
+
+            // Validate number
+            const phoneRegex = /^[0-9 ]{8,20}$/;
+            if (!phoneRegex.test(phoneNumber)) {
+                alert("Invalid phone number. It must contain only numbers and be between 8-20 digits.");
+                return;
+            }
+
+            // Put request on server for update
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:3000/api/users/update/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ name: firstName , lastname : lastName, number : phoneNumber, userId : userId }),
+                });
+
+                // Check server response
+                if (response.ok) {
+                    alert('Data changed successfully!');
+                    await createProfileSettingsPage();
+                } else {
+                    alert('Error changing user values!');
+                }
+            } catch (error) {
+                console.error('Error changing user values:', error);
+                alert('Error changing user values!');
+            }
         })
-
-
-
     }
     catch (error) {
         console.error('There was a problem with the fetch operation:', error);

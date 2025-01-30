@@ -1,6 +1,7 @@
 const express = require('express');
 const userController = require('../controllers/userController');
 const { authenticateToken, login, register, logout } = require('../controllers/authController');
+const chatController = require("../controllers/chatController");
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.post('/register', userController.registerUser);
 router.post('/login', userController.loginUser);
 router.post('/verifyToken',userController.verifyToken);
 router.get('/profile/:id', userController.getUserById);
+router.put('/update/:userId', authenticateToken, userController.updateUserData);
 
 module.exports = router;

@@ -214,6 +214,24 @@ ul.list-group::-webkit-scrollbar {
 .user-text-info-text {
     color: #fffffe;
     font-weight: bold;
+    font-size: 2rem!important;
+}
+
+.username-text-info-text{
+    color: #fffffe;
+    font-weight: 300;
+    font-size: 1.1rem!important;
+    font-family: 'Poppins', sans-serif;
+}
+
+@media (max-width: 750px) {
+    .user-text-info-text {
+        font-size: 1rem !important;
+    }
+
+    .username-text-info-text {
+        font-size: 0.7rem !important;
+    }
 }
 
 .chat-bar {

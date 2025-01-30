@@ -153,6 +153,30 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+exports.updateUserData = async (req, res) => {
+    const { userId, name, lastname, number } = req.body;
+
+    if (!userId || !name || name.trim() === '') {
+        return res.status(400).json({ error: 'Not enough data' });
+    }
+
+    try {
+        const user = await db.User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        user.name = name;
+        user.lastname = lastname;
+        user.number = number;
+        await user.save();
+
+        res.json(user);
+    } catch (error) {
+        console.error('Error updating chat name:', error);
+    }
+}
+
 exports.verifyToken = (req, res) => {
     try {
         // Získaj token z hlavičky Authorization
