@@ -254,7 +254,6 @@ ul.list-group::-webkit-scrollbar {
 
 
 /*Chat Messages*/
-
 .messages-box {
     display: flex;
     flex-direction: column;
@@ -452,14 +451,15 @@ ul.list-group::-webkit-scrollbar {
     color: #fff;
     border: none;
     padding-left: 0;
-    margin-top: -10px;
-    font-size: 20px;
-    font-weight: 500;
+    margin-left: 0.41rem;
+    font-size: 1.4rem;
     cursor: pointer;
     background: linear-gradient(-135deg, #ff8906, #f25f4c);
     transition: all 0.3s ease;
     border-radius: 25px;
     font-family: 'Poppins', sans-serif;
+    font-weight: bold;
+    max-width: 13rem;
 }
 
 .form {
