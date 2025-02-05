@@ -367,6 +367,8 @@ async function loadData() {
 
                 // Add all users to element
                 users.forEach(user => {
+
+
                     const li = document.createElement('li');
                     li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
                     li.id = `${user.id}`;

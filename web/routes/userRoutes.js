@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/', authenticateToken, userController.getAllUsersWithout);
 router.get('/all', userController.getAllUsers);
-router.get('/search', userController.search);
+router.get('/search',authenticateToken, userController.search);
 router.get('/profile/:id', userController.getUserById);
 router.get('/:id', userController.getUserById);
 router.put('/:id', userController.updateUser);

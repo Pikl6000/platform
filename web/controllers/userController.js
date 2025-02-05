@@ -203,11 +203,12 @@ exports.verifyToken = (req, res) => {
 
 exports.search = async (req, res) => {
     const { query } = req.query;
+    const userId = req.user.id;
 
     if (!query) {
         return res.status(400).json({ error: 'No search query provided' });
     }
-    
+
     const searchTerms = query.split(' ').filter(term => term.trim() !== '');
 
     try {
@@ -218,7 +219,8 @@ exports.search = async (req, res) => {
                         { name: { [Op.like]: `%${term}%` } },
                         { lastname: { [Op.like]: `%${term}%` } }
                     ]
-                }))
+                })),
+                id: { [Op.ne]: userId }
             }
         });
 
