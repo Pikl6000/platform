@@ -199,3 +199,33 @@ exports.verifyToken = (req, res) => {
         res.status(400).send('Invalid Token');
     }
 };
+
+
+exports.search = async (req, res) => {
+    const { query } = req.query;
+
+    if (!query) {
+        return res.status(400).json({ error: 'No search query provided' });
+    }
+    
+    const searchTerms = query.split(' ').filter(term => term.trim() !== '');
+
+    try {
+        const users = await db.User.findAll({
+            where: {
+                [Op.and]: searchTerms.map(term => ({
+                    [Op.or]: [
+                        { name: { [Op.like]: `%${term}%` } },
+                        { lastname: { [Op.like]: `%${term}%` } }
+                    ]
+                }))
+            }
+        });
+
+        res.json(users);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+};
+

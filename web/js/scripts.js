@@ -301,18 +301,18 @@ async function loadData() {
     }
 
     try {
-        let token = localStorage.getItem('token');
-        let data = await fetchWithToken('http://localhost:3000/api/users/', token);
+        // let token = localStorage.getItem('token');
+        // let data = await fetchWithToken('http://localhost:3000/api/users/', token);
+        //
+        // if (!data) {
+        //     token = await refreshAccessToken();
+        //     if (!token) throw new Error('Unable to refresh token');
+        //
+        //     data = await fetchWithToken('http://localhost:3000/api/users/', token);
+        //     if (!data) throw new Error('Unable to fetch data after refreshing token');
+        // }
 
-        if (!data) {
-            token = await refreshAccessToken();
-            if (!token) throw new Error('Unable to refresh token');
-
-            data = await fetchWithToken('http://localhost:3000/api/users/', token);
-            if (!data) throw new Error('Unable to fetch data after refreshing token');
-        }
-
-        console.log(data);
+        //console.log(data);
 
         const container = document.querySelector('.selection');
         container.innerHTML = '';
@@ -322,25 +322,66 @@ async function loadData() {
         h.textContent = "Users";
         container.appendChild(h);
 
+
+        // Create search bar
+        const container2 = document.createElement('div');
+        container2.classList.add('form-group','flex-grow-1','m-0');
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.classList.add('user-search', 'ps-3');
+        input.id = 'user-search';
+        container2.appendChild(input);
+        container.appendChild(container2);
+
         // Create list
         const ul = document.createElement('ul');
         ul.classList.add('list-group');
-
-        // Add all users to element
-        data.forEach(user => {
-            const li = document.createElement('li');
-            li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
-            li.id = `${user.id}`;
-
-            const userName = document.createElement('span');
-            userName.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
-            userName.textContent = truncateText(user.name,15)+' '+truncateText(user.lastname,10);
-
-            li.appendChild(userName);
-            ul.appendChild(li);
-        });
-
         container.appendChild(ul);
+
+        // Search
+        input.addEventListener('input', async function () {
+            document.querySelector('.list-group').textContent = '';
+
+            const searchQuery = input.value.trim();
+
+            if (searchQuery.length === 0) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`http://localhost:3000/api/users/search?query=${encodeURIComponent(searchQuery)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch users');
+                }
+
+                const users = await response.json();
+
+                // Add all users to element
+                users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.classList.add('list-group-item-users', 'd-flex', 'justify-content-between', 'align-items-center', 'user-list-item');
+                    li.id = `${user.id}`;
+
+                    const userName = document.createElement('span');
+                    userName.classList.add('badge', 'rounded-pill', 'list-user-item-text', 'p-0');
+                    userName.textContent = truncateText(user.name,15)+' '+truncateText(user.lastname,10);
+
+                    li.appendChild(userName);
+                    ul.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error searching users:', error);
+            }
+        });
     } catch (error) {
         console.error('There was a problem with the fetch operation:', error);
     }
